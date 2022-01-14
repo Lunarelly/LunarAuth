@@ -1,0 +1,55 @@
+# LunarAuth plugin config
+
+# Config version. Don't change it!
+config-version: 1.0
+
+# Auth settings
+settings:
+  ipLogin: true
+  chatAuth: true
+  effects: true
+  minPasswordLength: 3
+  maxPasswordLength: 30
+  maxLoginAttempts: 5
+  loginTimeout: 120 # In seconds
+
+# Auth messages
+messages:
+  joinMessage: "Welcome to the server, {USER}!"
+  userLogin: "Please, authenticate using /login <password>"
+  userChatLogin: "Please, authenticate with typing your password in chat or using /login!"
+  userRegistration: "Please, register using /register <password> <repeat password>"
+  userChatRegistration: "Please, register with typing your password 2 times in chat or using /register!"
+  successfulAuthorization: "You have been logged in by your IP!"
+  successfulLogin: "You have been logged in!"
+  successfulRegistration: "You have been registred! Your password: {PASSWORD}"
+  successfulPasswordChange: "You have changed your password! New password: {PASSWORD}"
+  successfulUserRemove: "You have successfully removed {USER}'s account!"
+  userInfo: "User: {USER} {EOL}Password: {PASSWORD} {EOL}IP: {IP}"
+  userNotRegistred: "You are not registred!"
+  userNotRegistredConsole: "User is not registred!"
+  userAlreadyLoggedIn: "You are already logged in!"
+  userAlreadyRegistred: "You are already registred!"
+  incorrectPassword: "Incorrect password!"
+  passwordsDoesNotMatch: "Passwords does not match!"
+  invalidPasswordSymbols: "Invalid symbols!"
+  invalidPasswordLength: "Invalid password length!"
+
+# Auth kicks
+kicks:
+  loginTimeout: "Login timeout"
+  tooManyLoginAttempts: "Too many login attempts!"
+  userAlreadyOnline: "Player is already online!"
+
+# Auth usages
+usage:
+  login: "Usage: /login <password>"
+  chatLogin: "Type your password in chat or use /login"
+  register: "Usage: /register <password> <repeat password>"
+  chatRegister: "Type your new password 2 times in chat or use /register"
+  changepassword: "Usage: /changepassword <old password> <new password>"
+  removeuser: "Usage: /removeuser <nick>"
+  userinfo: "Usage: /userinfo <nick>"
+  default: "Usage: /lunarauth <help|info>"
+
+# Plugin was made with <3 by Lunarelly (https://github.com/Lunarelly)

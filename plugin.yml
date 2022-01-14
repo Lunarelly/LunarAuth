@@ -1,0 +1,31 @@
+name: LunarAuth
+main: lunarauth\LunarAuth
+
+version: 1.0.0
+api: 2.0.0
+
+prefix: "LunarAuth"
+description: "Cool auth plugin"
+
+author: Lunarelly
+website: https://github.com/Lunarelly
+
+permissions:
+  lunarauth.command.changepassword:
+    default: true
+    description: "Change password command permission"
+  lunarauth.command.login:
+    default: true
+    description: "Login command permission"
+  lunarauth.command.default:
+    default: true
+    description: "LunarAuth command permission"
+  lunarauth.command.register:
+    default: true
+    description: "Register command permission"
+  lunarauth.command.removeuser:
+    default: op
+    description: "Remove user command permission"
+  lunarauth.command.userinfo:
+    default: op
+    description: "User info command permission"
