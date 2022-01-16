@@ -1,55 +1,94 @@
 # LunarAuth plugin config
 
 # Config version. Don't change it!
-config-version: 1.0
+config-version: 1.2
 
 # Auth settings
 settings:
+  # Database provider. Availible providers: SQLite3, JSON, YAML. I recommend to use SQLite3 for much performance. | Default: SQLite3
+  provider: "sqlite3"
+  # IP Login. (true - enable, false - disable) | Default: true
   ipLogin: true
+  # Authorization from chat, not only commands. (true - enable, false - disable) | Default: true
   chatAuth: true
+  # Blindness and invisibility effect when not authorizated. (true - enable, false - disable) | Default: true
   effects: true
+  # Minimal password length .(in symbols) | Default: 3
   minPasswordLength: 3
+  # Maximal password length. (in symbols) | Default: 30
   maxPasswordLength: 30
+  # Maximal count of login attempts. (invalid password) | Default: 5
   maxLoginAttempts: 5
-  loginTimeout: 120 # In seconds
+  # When player is not authorizated in your value, server kicks him. (in seconds) | Default: 120
+  loginTimeout: 120
 
 # Auth messages
 messages:
+  # This message will be shown on player join. Availible tags: {USER} - player's nickname
   joinMessage: "Welcome to the server, {USER}!"
+  # This message will be shown when player is need to login.
   userLogin: "Please, authenticate using /login <password>"
+  # This message will be shown when player is need to login. (If chat auth enabled)
   userChatLogin: "Please, authenticate with typing your password in chat or using /login!"
+  # This message will be shown when player is need to register new account.
   userRegistration: "Please, register using /register <password> <repeat password>"
+  # This message will be shown when player is need to register new account. (If chat auth enabled)
   userChatRegistration: "Please, register with typing your password 2 times in chat or using /register!"
+  # This message will be shown when player is automatically logged in by IP. (If ip login is enabled)
   successfulAuthorization: "You have been logged in by your IP!"
+  # This message will be shown when player is logged in by password.
   successfulLogin: "You have been logged in!"
+  # This message will be shown when player is registred. Availible tags: {PASSWORD} - player's password
   successfulRegistration: "You have been registred! Your password: {PASSWORD}"
+  # This message will be shown when player is changed his password. Availible tags: {PASSWORD} - player's new password
   successfulPasswordChange: "You have changed your password! New password: {PASSWORD}"
+  # This message will be shown on user account removing.
   successfulUserRemove: "You have successfully removed {USER}'s account!"
+  # This message will be shown on user info command output
   userInfo: "User: {USER} {EOL}Password: {PASSWORD} {EOL}IP: {IP}"
+  # This message will be shown if player is not registred.
   userNotRegistred: "You are not registred!"
+  # This message will be shown if user is not registred.
   userNotRegistredConsole: "User is not registred!"
+  # This message will be shown if player is already logged in.
   userAlreadyLoggedIn: "You are already logged in!"
+  # This message will be shown if player is already registred.
   userAlreadyRegistred: "You are already registred!"
+  # This message will be shown if player has sent incorrect password.
   incorrectPassword: "Incorrect password!"
+  # This message will be shown if player's passwords doesn't match.
   passwordsDoesNotMatch: "Passwords does not match!"
+  # This message will be shown if player is trying to use forbidden symbols.
   invalidPasswordSymbols: "Invalid symbols!"
+  # This message will be shown if player is trying to use password out of allowed length range.
   invalidPasswordLength: "Invalid password length!"
 
 # Auth kicks
 kicks:
+  # This message will be shown on login timeout kick.
   loginTimeout: "Login timeout"
+  # This message will be shown on kick when player hit maximal login attempts
   tooManyLoginAttempts: "Too many login attempts!"
+  # This message will be shown on kick when player is trying to join with another player's nick
   userAlreadyOnline: "Player is already online!"
 
 # Auth usages
 usage:
+  # Usage of /login command.
   login: "Usage: /login <password>"
+  # Usage of chat login.
   chatLogin: "Type your password in chat or use /login"
+  # Usage of /register command.
   register: "Usage: /register <password> <repeat password>"
+  # Usage of chat register.
   chatRegister: "Type your new password 2 times in chat or use /register"
+  # Usage of /changepassword command.
   changepassword: "Usage: /changepassword <old password> <new password>"
+  # Usage of /removeuser command.
   removeuser: "Usage: /removeuser <nick>"
+  # Usage of /userinfo command.
   userinfo: "Usage: /userinfo <nick>"
+  # Usage of /lunarauth command.
   default: "Usage: /lunarauth <help|info>"
 
 # Plugin was made with <3 by Lunarelly (https://github.com/Lunarelly)

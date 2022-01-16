@@ -37,7 +37,7 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand {
         $this->main = $main;
         $this->setDescription("Register command");
         $this->setPermission("lunarauth.command.register");
-        $this->setUsage($this->main->getConfig()->getNested("usage.register"));
+        $this->setUsage($this->main->getConfig()->getNested("usages.register"));
         $this->aliases = ["r", "reg"];
         parent::__construct("register", $this->description, $this->usageMessage, $this->aliases);
     }

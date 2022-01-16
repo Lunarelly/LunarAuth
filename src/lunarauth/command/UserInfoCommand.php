@@ -35,7 +35,7 @@ class UserInfoCommand extends Command implements PluginIdentifiableCommand {
         $this->main = $main;
         $this->setDescription("User info command");
         $this->setPermission("lunarauth.command.userinfo");
-        $this->setUsage($this->main->getConfig()->getNested("usage.userinfo"));
+        $this->setUsage($this->main->getConfig()->getNested("usages.userinfo"));
         $this->aliases = ["checkpassword", "checkuser"];
         parent::__construct("userinfo", $this->description, $this->usageMessage, $this->aliases);
     }

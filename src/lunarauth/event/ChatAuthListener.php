@@ -49,7 +49,7 @@ class ChatAuthListener implements Listener {
                 $message = explode(" ", $event->getMessage());
                 if($this->main->isUserRegistred($username) == false) {
                     if(empty($message) or !(isset($message[0])) or !(isset($message[1]))) {
-                        return $player->sendMessage($config->getNested("usage.chatRegister"));
+                        return $player->sendMessage($config->getNested("usages.chatRegister"));
                     }
                     if(!(preg_match("/[^a-zA-Z_\d]/", $message[0]) == 0 or preg_match("/[^a-zA-Z_\d]/", $message[1]) == 0)) {
                         return $player->sendMessage($config->getNested("messages.invalidPasswordSymbols"));
@@ -67,7 +67,7 @@ class ChatAuthListener implements Listener {
                     $player->sendMessage(str_replace("{PASSWORD}", $password, $config->getNested("messages.successfulRegistration")));
                 } else {
                     if(empty($message) or !(isset($message[0]))) {
-                        return $player->sendMessage($config->getNested("usage.chatLogin"));
+                        return $player->sendMessage($config->getNested("usages.chatLogin"));
                     }
                     $password = $message[0];
                     if(!($password === $this->main->getUserPassword($username))) {

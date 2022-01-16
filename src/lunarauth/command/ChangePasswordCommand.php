@@ -36,7 +36,7 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         $this->main = $main;
         $this->setDescription("Change password command");
         $this->setPermission("lunarauth.command.changepassword");
-        $this->setUsage($this->main->getConfig()->getNested("usage.changepassword"));
+        $this->setUsage($this->main->getConfig()->getNested("usages.changepassword"));
         $this->aliases = ["cp", "chp"];
         parent::__construct("changepassword", $this->description, $this->usageMessage, $this->aliases);
     }

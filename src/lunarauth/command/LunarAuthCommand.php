@@ -34,7 +34,7 @@ class LunarAuthCommand extends Command implements PluginIdentifiableCommand {
         $this->main = $main;
         $this->setDescription("LunarAuth command");
         $this->setPermission("lunarauth.command.default");
-        $this->setUsage($this->main->getConfig()->getNested("usage.default"));
+        $this->setUsage($this->main->getConfig()->getNested("usages.default"));
         $this->aliases = ["la", "auth"];
         parent::__construct("lunarauth", $this->description, $this->usageMessage, $this->aliases);
     }

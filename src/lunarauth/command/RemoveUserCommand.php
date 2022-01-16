@@ -35,7 +35,7 @@ class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
         $this->main = $main;
         $this->setDescription("Remove user command");
         $this->setPermission("lunarauth.command.removeuser");
-        $this->setUsage($this->main->getConfig()->getNested("usage.removeuser"));
+        $this->setUsage($this->main->getConfig()->getNested("usages.removeuser"));
         $this->aliases = ["deluser", "rmuser"];
         parent::__construct("removeuser", $this->description, $this->usageMessage, $this->aliases);
     }

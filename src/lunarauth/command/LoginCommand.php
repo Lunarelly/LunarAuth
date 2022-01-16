@@ -34,7 +34,7 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
         $this->main = $main;
         $this->setDescription("Login command");
         $this->setPermission("lunarauth.command.login");
-        $this->setUsage($this->main->getConfig()->getNested("usage.login"));
+        $this->setUsage($this->main->getConfig()->getNested("usages.login"));
         $this->aliases = ["l", "log"];
         parent::__construct("login", $this->description, $this->usageMessage, $this->aliases);
     }
