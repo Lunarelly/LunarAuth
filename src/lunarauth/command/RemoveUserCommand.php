@@ -47,13 +47,13 @@ class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
         if(!($sender instanceof ConsoleCommandSender)) {
             return $sender->sendMessage("Only from console!");
         }
-        $name = strtolower($args[0]);
+        $username = strtolower($args[0]);
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($name) == false) {
+        if($this->main->isUserRegistred($username) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotRegistredConsole"));
         }
-        $this->main->removeUser($name);
-        $sender->sendMessage(str_replace("{USER}", $name, $config->getNested("messages.successfulUserRemove")));
+        $this->main->removeUser($username);
+        $sender->sendMessage(str_replace("{USER}", $username, $config->getNested("messages.successfulUserRemove")));
         return true;
     }
 

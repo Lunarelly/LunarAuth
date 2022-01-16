@@ -48,9 +48,9 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         if(!($this->testPermission($sender))) {
             return false;
         }
-        $name = strtolower($sender->getName());
+        $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($name) == false) {
+        if($this->main->isUserRegistred($username) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotRegistred"));
         }
         if($this->main->isUserAuthenticated($sender) == false) {
@@ -61,7 +61,7 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         }
         $oldPassword = $args[0];
         $newPassword = $args[1];
-        if(!($oldPassword === $this->main->getUserPassword($name))) {
+        if(!($oldPassword === $this->main->getUserPassword($username))) {
             return $sender->sendMessage($config->getNested("messages.incorrectPassword"));
         }
         if(!(preg_match("/[^a-zA-Z_\d]/", $newPassword) == 0)) {

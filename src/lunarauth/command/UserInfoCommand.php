@@ -47,14 +47,14 @@ class UserInfoCommand extends Command implements PluginIdentifiableCommand {
         if(!($sender instanceof ConsoleCommandSender)) {
             return $sender->sendMessage("Only from console!");
         }
-        $name = strtolower($args[0]);
+        $username = strtolower($args[0]);
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($name) == false) {
+        if($this->main->isUserRegistred($username) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotRegistredConsole"));
         }
-        $password = $this->main->getUserPassword($name);
-        $address = $this->main->getUserAddress($name);
-        $sender->sendMessage(str_replace(["{USER}", "{PASSWORD}", "{IP}", "{EOL}"], [$name, $password, $address, "\n"], $config->getNested("messages.userInfo")));
+        $password = $this->main->getUserPassword($username);
+        $address = $this->main->getUserAddress($username);
+        $sender->sendMessage(str_replace(["{USER}", "{PASSWORD}", "{IP}", "{EOL}"], [$username, $password, $address, "\n"], $config->getNested("messages.userInfo")));
         return true;
     }
 

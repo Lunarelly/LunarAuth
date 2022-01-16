@@ -56,12 +56,12 @@ class EventListener implements Listener {
 
     public function playerJoin(PlayerJoinEvent $event) {
         $player = $event->getPlayer();
-        $name = strtolower($player->getName());
+        $username = strtolower($player->getName());
         $config = $this->main->getConfig();
         $this->main->authenticateUser($player, false);
         $player->sendMessage(str_replace("{USER}", $player->getName(), $config->getNested("messages.joinMessage")));
         if($config->getNested("settings.ipLogin") == true) {
-            if($player->getAddress() == $this->main->getUserAddress($name)) {
+            if($player->getAddress() == $this->main->getUserAddress($username)) {
                 $this->main->authenticateUser($player, true);
                 return $player->sendMessage($config->getNested("messages.successfulAuthorization"));
             }
@@ -78,7 +78,7 @@ class EventListener implements Listener {
             $player->addEffect($invisibility);
             $player->addEffect($blindness);
         }
-        if($this->main->isUserRegistred($name) == false) {
+        if($this->main->isUserRegistred($username) == false) {
             if($config->getNested("settings.chatAuth") == true) {
                 $player->sendMessage($config->getNested("messages.userChatRegistration"));
             } else {

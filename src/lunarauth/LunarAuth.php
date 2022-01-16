@@ -81,73 +81,80 @@ final class LunarAuth extends PluginBase {
         if(!(is_dir($this->getDataFolder() . "data"))) {
             @mkdir($this->getDataFolder() . "data");
         }
-        $this->usersConfig = new Config($this->getDataFolder() . "data/users.json", Config::JSON);
+        $this->usersDatabase = new \SQLite3($this->getDataFolder() . "data/users.db");
+        $this->usersDatabase->query("CREATE TABLE IF NOT EXISTS users (username VARCHAR(16) NOT NULL, password TEXT NOT NULL, address TEXT NOT NULL)");
     }
 
-    private function getUsersConfig() {
-        return $this->usersConfig;
+    private function getUsersDatabase() {
+        return $this->usersDatabase;
     }
 
-    private function saveData() {
-        $usersConfig = $this->getUsersConfig();
-        $usersConfig->save();
-    }
-
-    public function setUserPassword(string $name, string $password) {
-        $config = $this->getUsersConfig();
-        $config->setNested($name . ".password", $password);
-        $config->save();
-    }
-
-    public function setUserAddress(string $name, string $address) {
-        $config = $this->getUsersConfig();
-        $config->setNested($name . ".ip", $address);
-        $config->save();
-    }
-
-    public function getUserPassword(string $name) {
-        $config = $this->getUsersConfig();
-        if(!($config->getNested($name . ".password") == null)) {
-            $password = $config->getNested($name . ".password");
-        } else {
-            $password = null;
+    public function checkUserData(string $username) {
+        $username = strtolower($username);
+        $database = $this->getUsersDatabase();
+        $query = $database->query("SELECT * FROM users WHERE username = '" . $username . "'");
+        $result = $query->fetchArray(SQLITE3_ASSOC);
+        if(!($result)) {
+            $database->exec("INSERT INTO users VALUES ('" . $username . "', '0', '0')");
         }
-        return $password;
     }
 
-    public function getUserAddress(string $name) {
-        $config = $this->getUsersConfig();
-        if(!($config->getNested($name . ".ip") == null)) {
-            $address = $config->getNested($name . ".ip");
-        } else {
-            $address = null;
-        }
-        return $address;
+    public function setUserPassword(string $username, string $password) {
+        $username = strtolower($username);
+        $this->checkUserData($username);
+        $database = $this->getUsersDatabase();
+        $database->exec("UPDATE users SET password = '" . $password . "' WHERE username = '" . $username . "'");
     }
 
-    public function isUserRegistred(string $name) {
-        $config = $this->getUsersConfig();
-        if($config->exists($name)) {
-            $bool = true;
-        } else {
+    public function setUserAddress(string $username, string $address) {
+        $username = strtolower($username);
+        $this->checkUserData($username);
+        $database = $this->getUsersDatabase();
+        $database->exec("UPDATE users SET address = '" . $address . "' WHERE username = '" . $username . "'");
+    }
+
+    public function getUserPassword(string $username) {
+        $username = strtolower($username);
+        $database = $this->getUsersDatabase();
+        $query = $database->query("SELECT * FROM users WHERE username = '" . $username . "'");
+        $result = $query->fetchArray(SQLITE3_ASSOC);
+        return $result["password"];
+    }
+
+    public function getUserAddress(string $username) {
+        $username = strtolower($username);
+        $database = $this->getUsersDatabase();
+        $query = $database->query("SELECT * FROM users WHERE username = '" . $username . "'");
+        $result = $query->fetchArray(SQLITE3_ASSOC);
+        return $result["address"];
+    }
+
+    public function isUserRegistred(string $username) {
+        $username = strtolower($username);
+        $database = $this->getUsersDatabase();
+        $query = $database->query("SELECT * FROM users WHERE username = '" . $username . "'");
+        $result = $query->fetchArray(SQLITE3_ASSOC);
+        if(!($result) or $result["password"] == "0") {
             $bool = false;
+        } else {
+            $bool = true;
         }
         return $bool;
     }
 
     public function isUserAuthenticated(Player $player) {
-        $name = strtolower($player->getName());
-        if(!(isset($this->authenticated[$name]))) {
+        $username = strtolower($player->getName());
+        if(!(isset($this->authenticated[$username]))) {
             $bool = false;
         } else {
-            $bool = $this->authenticated[$name];
+            $bool = $this->authenticated[$username];
         }
         return $bool;
     }
 
     public function authenticateUser(Player $player, bool $bool) {
-        $name = strtolower($player->getName());
-        $this->authenticated[$name] = $bool;
+        $username = strtolower($player->getName());
+        $this->authenticated[$username] = $bool;
         if($this->getConfig()->getNested("settings.effects") == true and $bool == true) {
             $player->removeEffect(Effect::INVISIBILITY);
             $player->removeEffect(Effect::BLINDNESS);
@@ -155,66 +162,62 @@ final class LunarAuth extends PluginBase {
     }
 
     public function removeAuthenticatedUser(Player $player) {
-        $name = strtolower($player->getName());
-        if(isset($this->authenticated[$name])) {
-            unset($this->authenticated[$name]);
+        $username = strtolower($player->getName());
+        if(isset($this->authenticated[$username])) {
+            unset($this->authenticated[$username]);
         }
     }
 
     public function getUserLoginAttempts(Player $player) {
-        $name = strtolower($player->getName());
-        if(!(isset($this->loginAttempts[$name]))) {
+        $username = strtolower($player->getName());
+        if(!(isset($this->loginAttempts[$username]))) {
             $attempts = 0;
         } else {
-            $attempts = $this->loginAttempts[$name];
+            $attempts = $this->loginAttempts[$username];
         }
         return $attempts;
     }
 
     public function addUserLoginAttempt(Player $player, int $value) {
-        $name = strtolower($player->getName());
+        $username = strtolower($player->getName());
         $attempts = $this->getUserLoginAttempts($player);
-        $this->loginAttempts[$name] = $attempts + $value;
+        $this->loginAttempts[$username] = $attempts + $value;
     }
 
     public function removeUserLoginAttempts(Player $player) {
-        $name = strtolower($player->getName());
-        if(isset($this->loginAttempts[$name])) {
-            unset($this->loginAttempts[$name]);
+        $username = strtolower($player->getName());
+        if(isset($this->loginAttempts[$username])) {
+            unset($this->loginAttempts[$username]);
         }
     }
     
     public function registerUser(Player $player, string $password) {
-        $name = strtolower($player->getName());
+        $username = strtolower($player->getName());
         $address = $player->getAddress();
-        $this->setUserPassword($name, $password);
-        $this->setUserAddress($name, $address);
+        $this->setUserPassword($username, $password);
+        $this->setUserAddress($username, $address);
         $this->authenticateUser($player, true);
     }
 
     public function loginUser(Player $player) {
-        $name = strtolower($player->getName());
+        $username = strtolower($player->getName());
         $address = $player->getAddress();
-        $this->setUserAddress($name, $address);
+        $this->setUserAddress($username, $address);
         $this->authenticateUser($player, true);
     }
 
     public function changeUserPassword(Player $player, string $password) {
-        $name = strtolower($player->getName());
-        $this->setUserPassword($name, $password);
+        $username = strtolower($player->getName());
+        $this->setUserPassword($username, $password);
     }
 
-    public function removeUser(string $name) {
-        $config = $this->getUsersConfig();
-        $name = strtolower($name);
-        if($config->exists($name)) {
-            $config->remove($name);
-            $config->save();
-        }
+    public function removeUser(string $username) {
+        $username = strtolower($username);
+        $database = $this->getUsersDatabase();
+        $database->exec("DELETE FROM users WHERE username = '" . $username . "'");
     }
 
     public function onDisable() {
-        $this->saveData();
-        $this->getLogger()->info("Saving data...");
+        $this->getUsersDatabase()->close();
     }
 }

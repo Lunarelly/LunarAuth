@@ -49,9 +49,9 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand {
         if(!($this->testPermission($sender))) {
             return false;
         }
-        $name = strtolower($sender->getName());
+        $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($name) == true) {
+        if($this->main->isUserRegistred($username) == true) {
             return $sender->sendMessage($config->getNested("messages.userAlreadyRegistred"));
         }
         if($this->main->isUserAuthenticated($sender) == true) {

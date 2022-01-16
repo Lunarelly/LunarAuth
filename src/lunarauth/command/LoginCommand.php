@@ -46,9 +46,9 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
         if(!($this->testPermission($sender))) {
             return false;
         }
-        $name = strtolower($sender->getName());
+        $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($name) == false) {
+        if($this->main->isUserRegistred($username) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotRegistred"));
         }
         if($this->main->isUserAuthenticated($sender) == true) {
@@ -58,7 +58,7 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
             return $sender->sendMessage($this->usageMessage);
         }
         $password = $args[0];
-        if(!($password === $this->main->getUserPassword($name))) {
+        if(!($password === $this->main->getUserPassword($username))) {
             if($this->main->getUserLoginAttempts($sender) >= $config->getNested("settings.maxLoginAttempts")) {
                 $this->main->removeUserLoginAttempts($sender);
                 return $sender->kick($config->getNested("kicks.tooManyLoginAttempts"), false);

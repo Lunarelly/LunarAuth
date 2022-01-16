@@ -36,18 +36,18 @@ class ChatAuthListener implements Listener {
 
     public function chatLogin(PlayerChatEvent $event) {
         $player = $event->getPlayer();
-        $name = strtolower($player->getName());
+        $username = strtolower($player->getName());
         $config = $this->main->getConfig();
         if($config->getNested("settings.chatAuth") == true) {
             if($this->main->isUserAuthenticated($player) == true) {
-                if($event->getMessage() === $this->main->getUserPassword($name)) {
+                if($event->getMessage() === $this->main->getUserPassword($username)) {
                     $event->setCancelled(true);
                     $player->sendMessage($config->getNested("messages.userAlreadyLoggedIn"));
                 }
             } elseif($this->main->isUserAuthenticated($player) == false) {
                 $event->setCancelled(true);
                 $message = explode(" ", $event->getMessage());
-                if($this->main->isUserRegistred($name) == false) {
+                if($this->main->isUserRegistred($username) == false) {
                     if(empty($message) or !(isset($message[0])) or !(isset($message[1]))) {
                         return $player->sendMessage($config->getNested("usage.chatRegister"));
                     }
@@ -70,7 +70,7 @@ class ChatAuthListener implements Listener {
                         return $player->sendMessage($config->getNested("usage.chatLogin"));
                     }
                     $password = $message[0];
-                    if(!($password === $this->main->getUserPassword($name))) {
+                    if(!($password === $this->main->getUserPassword($username))) {
                         if($this->main->getUserLoginAttempts($player) >= $config->getNested("settings.maxLoginAttempts")) {
                             $this->main->removeUserLoginAttempts($player);
                             return $player->kick($config->getNested("kicks.tooManyLoginAttempts"), false);
