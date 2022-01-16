@@ -5,15 +5,19 @@ config-version: 1.2
 
 # Auth settings
 settings:
-  # Database provider. Availible providers: SQLite3, JSON, YAML. I recommend to use SQLite3 for much performance. | Default: SQLite3
+  # Database provider. Availible providers: SQLite3, MySQL, JSON, YAML. I recommend to use SQLite3 for much performance on local. | Default: SQLite3
   provider: "sqlite3"
+  # Encrypting passwords. (true - enable, false - disable) I highly recommend to keep it on true due to security reasons. | Algorithm: SHA512
+  encrypt: true
   # IP Login. (true - enable, false - disable) | Default: true
   ipLogin: true
   # Authorization from chat, not only commands. (true - enable, false - disable) | Default: true
   chatAuth: true
+  # Does not allow to send passwords in chat when authorizated. Works only with chat auth enabled. (true - enable, false - disable) Do not use this with "encrypt" enabled due to server lags | Default: false
+  noPasswordsInChat: false
   # Blindness and invisibility effect when not authorizated. (true - enable, false - disable) | Default: true
   effects: true
-  # Minimal password length .(in symbols) | Default: 3
+  # Minimal password length. (in symbols) | Default: 3
   minPasswordLength: 3
   # Maximal password length. (in symbols) | Default: 30
   maxPasswordLength: 30
@@ -21,6 +25,21 @@ settings:
   maxLoginAttempts: 5
   # When player is not authorizated in your value, server kicks him. (in seconds) | Default: 120
   loginTimeout: 120
+
+# MySQL auth settings (change provider in settings to "mysql")
+mysql:
+  # Is MySQL enabled (true - enable, false - disable)
+  enabled: false
+  # MySQL server IP (127.0.0.1 - localhost)
+  ip: "127.0.0.1"
+  # MySQL user
+  user: "mysql"
+  # MySQL user password
+  password: "lunarauth_mysql"
+  # MySQL database name
+  database: "lunarauth"
+  # MySQL port
+  port: 3306
 
 # Auth messages
 messages:
@@ -73,7 +92,7 @@ kicks:
   userAlreadyOnline: "Player is already online!"
 
 # Auth usages
-usage:
+usages:
   # Usage of /login command.
   login: "Usage: /login <password>"
   # Usage of chat login.

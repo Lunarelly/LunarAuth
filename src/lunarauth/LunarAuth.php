@@ -20,7 +20,6 @@ namespace lunarauth;
 
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
-use pocketmine\entity\Effect;
 use pocketmine\{
     Player,
     Server
@@ -32,18 +31,34 @@ use lunarauth\{
     command\RegisterCommand,
     command\RemoveUserCommand,
     command\UserInfoCommand,
-    event\ChatAuthListener,
-    event\EventListener,
+    event\PlayerAuthorizationEvent,
+    listener\ChatAuthListener,
+    listener\EventListener,
     task\LoginTask
 };
 
+use mysqli;
+
+use function mysqli_connect_errno;
+use function mysqli_connect_error;
+use function mysqli_connect;
+use function mysqli_query;
+use function mysqli_error;
+use function mysqli_close;
+use function mysqli_fetch_array;
+
 use function strtolower;
+use function hash;
 
 final class LunarAuth extends PluginBase {
 
     public static $instance = null;
 
+    public $databaseMySQL;
+
     public $provider = null;
+
+    public $usersDatabase = null;
 
     public $prefix = "[LunarAuth]";
 
@@ -75,6 +90,18 @@ final class LunarAuth extends PluginBase {
         Server::getInstance()->getScheduler()->scheduleRepeatingTask(new LoginTask($this), 20);
     }
 
+    private function connectToMySQL() {
+        $config = $this->getConfig();
+        $this->databaseMySQL = mysqli_connect($config->getNested("mysql.ip"), $config->getNested("mysql.user"), $config->getNested("mysql.password"), $config->getNested("mysql.database"), $config->getNested("mysql.port"));
+        if(mysqli_connect_errno()) {
+            $this->getLogger()->critical("Can't connect to database: " . mysqli_connect_error());
+            $this->getLogger()->alert("Reconnecting...");
+            $this->connectToMySQL();
+        } else {
+            $this->getLogger()->info("Successfully connected to MySQL database!");
+        }
+    }
+
     public function onEnable() {
         $this->saveDefaultConfig();
         $this->registerCommands();
@@ -86,7 +113,16 @@ final class LunarAuth extends PluginBase {
         if($this->getConfig()->getNested("settings.provider") == "sqlite3") {
             $this->provider = "SQLite3";
             $this->usersDatabase = new \SQLite3($this->getDataFolder() . "data/users.db");
-            $this->usersDatabase->query("CREATE TABLE IF NOT EXISTS users (username VARCHAR(16) NOT NULL, password TEXT NOT NULL, address TEXT NOT NULL)");
+            $this->usersDatabase->query("CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
+        } elseif($this->getConfig()->getNested("settings.provider") == "mysql") {
+            if($this->getConfig()->getNested("mysql.enabled") == true) {
+                $this->provider = "MySQL";
+                $this->connectToMySQL();
+                $this->usersDatabase = $this->databaseMySQL;
+            } else {
+                $this->getLogger()->critical("You have selected MySQL as provider, but not enabled it. Disabling plugin.");
+                return $this->setEnabled(false);
+            }
         } elseif($this->getConfig()->getNested("settings.provider") == "json") {
             $this->provider = "JSON";
             $this->usersDatabase = new Config($this->getDataFolder() . "data/users.json", Config::JSON);
@@ -109,23 +145,34 @@ final class LunarAuth extends PluginBase {
     }
 
     public function checkUserData(string $username) {
+        $username = strtolower($username);
+        $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $username = strtolower($username);
-            $database = $this->getUsersDatabase();
-            $query = $database->query("SELECT * FROM users WHERE username = '" . $username . "'");
+            $query = $database->query("SELECT * FROM `users` WHERE `username` = '" . $username . "';");
             $result = $query->fetchArray(SQLITE3_ASSOC);
             if(!($result)) {
-                $database->exec("INSERT INTO users VALUES ('" . $username . "', '0', '0')");
+                $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '0', '0')");
+            }
+        } elseif($this->getProvider() == "MySQL") {
+            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
+            $result = mysqli_fetch_array($query);
+            if(!($result)) {
+                mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '0', '0')");
             }
         }
     }
 
     public function setUserPassword(string $username, string $password) {
+        if($this->getConfig()->getNested("settings.encrypt") == true) {
+            $password = hash("sha512", $password);
+        }
         $username = strtolower($username);
         $this->checkUserData($username);
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $database->exec("UPDATE users SET password = '" . $password . "' WHERE username = '" . $username . "'");
+            $database->exec("UPDATE `users` SET `password` = '" . $password . "' WHERE `username` = '" . $username . "';");
+        } elseif($this->getProvider() == "MySQL") {
+            mysqli_query($database, "UPDATE `users` SET `password` = '" . $password . "' WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "JSON") {
             $database->setNested($username . ".password", $password);
             $database->save();
@@ -140,7 +187,9 @@ final class LunarAuth extends PluginBase {
         $this->checkUserData($username);
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $database->exec("UPDATE users SET address = '" . $address . "' WHERE username = '" . $username . "'");
+            $database->exec("UPDATE `users` SET `address` = '" . $address . "' WHERE `username` = '" . $username . "';");
+        } elseif($this->getProvider() == "MySQL") {
+            mysqli_query($database, "UPDATE `users` SET `address` = '" . $address . "' WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "JSON") {
             $database->setNested($username . ".address", $address);
             $database->save();
@@ -154,7 +203,11 @@ final class LunarAuth extends PluginBase {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $password = $database->querySingle("SELECT password FROM users WHERE username = '" . $username . "'");
+            $password = $database->querySingle("SELECT `password` FROM `users` WHERE `username` = '" . $username . "';");
+        } elseif($this->getProvider() == "MySQL") {
+            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
+            $result = mysqli_fetch_array($query);
+            $password = $result["password"];
         } elseif($this->getProvider() == "JSON") {
             $password = $database->getNested($username . ".password");
         } elseif($this->getProvider() == "YAML") {
@@ -167,7 +220,11 @@ final class LunarAuth extends PluginBase {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $address = $database->querySingle("SELECT address FROM users WHERE username = '" . $username . "'");
+            $address = $database->querySingle("SELECT `address` FROM `users` WHERE `username` = '" . $username . "';");
+        } elseif($this->getProvider() == "MySQL") {
+            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
+            $result = mysqli_fetch_array($query);
+            $address = $result["address"];
         } elseif($this->getProvider() == "JSON") {
             $address = $database->getNested($username . ".address");
         } elseif($this->getProvider() == "YAML") {
@@ -180,8 +237,16 @@ final class LunarAuth extends PluginBase {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $query = $database->query("SELECT * FROM users WHERE username = '" . $username . "'");
+            $query = $database->query("SELECT * FROM `users` WHERE `username` = '" . $username . "';");
             $result = $query->fetchArray(SQLITE3_ASSOC);
+            if(!($result) or $result["password"] == "0") {
+                $bool = false;
+            } else {
+                $bool = true;
+            }
+        } elseif($this->getProvider() == "MySQL") {
+            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
+            $result = mysqli_fetch_array($query);
             if(!($result) or $result["password"] == "0") {
                 $bool = false;
             } else {
@@ -214,12 +279,15 @@ final class LunarAuth extends PluginBase {
     }
 
     public function authenticateUser(Player $player, bool $bool) {
+        if($bool == true) {
+            $event = new PlayerAuthorizationEvent($player);
+            Server::getInstance()->getPluginManager()->callEvent($event);
+            if($event->isCancelled()) {
+                return;
+            }
+        }
         $username = strtolower($player->getName());
         $this->authenticated[$username] = $bool;
-        if($this->getConfig()->getNested("settings.effects") == true and $bool == true) {
-            $player->removeEffect(Effect::INVISIBILITY);
-            $player->removeEffect(Effect::BLINDNESS);
-        }
     }
 
     public function removeAuthenticatedUser(Player $player) {
@@ -253,11 +321,16 @@ final class LunarAuth extends PluginBase {
     }
     
     public function registerUser(Player $player, string $password) {
+        if($this->getConfig()->getNested("settings.encrypt") == true) {
+            $password = hash("sha512", $password);
+        }
         $username = strtolower($player->getName());
         $address = $player->getAddress();
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $database->exec("INSERT INTO users VALUES ('" . $username . "', '" . $password . "', '" . $address . "')");
+            $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "');");
+        } elseif($this->getProvider() == "MySQL") {
+            mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "');");
         } elseif($this->getProvider() == "JSON") {
             $database->setNested($username . ".password", $password);
             $database->setNested($username . ".address", $address);
@@ -286,7 +359,9 @@ final class LunarAuth extends PluginBase {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
-            $database->exec("DELETE FROM users WHERE username = '" . $username . "'");
+            $database->exec("DELETE FROM `users` WHERE `username` = '" . $username . "';");
+        } elseif($this->getProvider() == "MySQL") {
+            mysqli_query($database, "DELETE FROM `users` WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "JSON") {
             $database->remove($username);
             $database->save();
@@ -300,6 +375,8 @@ final class LunarAuth extends PluginBase {
         $database = $this->getUsersDatabase();
         if($this->getProvider() == "SQLite3") {
             $database->close();
+        } elseif($this->getProvider() == "MySQL") {
+            mysqli_close($database);
         } elseif($this->getProvider() == "JSON") {
             $database->save();
         } elseif($this->getProvider() == "YAML") {

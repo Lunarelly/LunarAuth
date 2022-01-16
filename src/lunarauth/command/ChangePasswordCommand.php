@@ -59,12 +59,16 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         if(empty($args) or !(isset($args[0])) or !(isset($args[1]))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        $oldPassword = $args[0];
+        if($this->main->getConfig()->getNested("settings.encrypt") == true) {
+            $oldPassword = hash("sha512", $args[0]);
+        } else {
+            $oldPassword = $args[0];
+        }
         $newPassword = $args[1];
         if(!($oldPassword === $this->main->getUserPassword($username))) {
             return $sender->sendMessage($config->getNested("messages.incorrectPassword"));
         }
-        if(!(preg_match("/[^a-zA-Z_\d]/", $newPassword) == 0)) {
+        if(preg_match("/^[\x{0020}-\x{007E}]*$/", $newPassword) == 0) {
             return $sender->sendMessage($config->getNested("messages.invalidPasswordSymbols"));
         }
         $minLength = $this->main->getConfig()->getNested("settings.minPasswordLength");

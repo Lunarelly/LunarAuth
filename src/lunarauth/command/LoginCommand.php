@@ -27,6 +27,7 @@ use pocketmine\Player;
 use lunarauth\LunarAuth;
 
 use function strtolower;
+use function hash;
 
 class LoginCommand extends Command implements PluginIdentifiableCommand {
 
@@ -57,7 +58,11 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
         if(empty($args) or !(isset($args[0]))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        $password = $args[0];
+        if($this->main->getConfig()->getNested("settings.encrypt") == true) {
+            $password = hash("sha512", $args[0]);
+        } else {
+            $password = $args[0];
+        }
         if(!($password === $this->main->getUserPassword($username))) {
             if($this->main->getUserLoginAttempts($sender) >= $config->getNested("settings.maxLoginAttempts")) {
                 $this->main->removeUserLoginAttempts($sender);

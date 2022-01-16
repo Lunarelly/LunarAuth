@@ -1,7 +1,7 @@
 name: LunarAuth
 main: lunarauth\LunarAuth
 
-version: 1.0.2
+version: 1.0.3
 api: 2.0.0
 
 prefix: "LunarAuth"

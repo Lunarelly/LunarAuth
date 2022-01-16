@@ -60,7 +60,7 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand {
         if(empty($args) or !(isset($args[0])) or !(isset($args[1]))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        if(!(preg_match("/[^a-zA-Z_\d]/", $args[0]) == 0 or preg_match("/[^a-zA-Z_\d]/", $args[1]) == 0)) {
+        if(preg_match("/^[\x{0020}-\x{007E}]*$/", $args[0]) == 0 or preg_match("/^[\x{0020}-\x{007E}]*$/", $args[1]) == 0) {
             return $sender->sendMessage($config->getNested("messages.invalidPasswordSymbols"));
         }
         $minLength = $config->getNested("settings.minPasswordLength");
