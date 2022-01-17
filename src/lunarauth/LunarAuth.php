@@ -54,6 +54,8 @@ final class LunarAuth extends PluginBase {
 
     private $databaseMySQL;
 
+    private $connectedToMySQL;
+
     private $provider;
 
     private $usersDatabase;
@@ -99,10 +101,10 @@ final class LunarAuth extends PluginBase {
         $config = $this->getConfig();
         $this->databaseMySQL = mysqli_connect($config->getNested("mysql.ip"), $config->getNested("mysql.user"), $config->getNested("mysql.password"), $config->getNested("mysql.database"), $config->getNested("mysql.port"));
         if(mysqli_connect_errno()) {
+            $this->connectedToMySQL = false;
             $this->getLogger()->critical("Can't connect to database: " . mysqli_connect_error());
-            $this->getLogger()->alert("Reconnecting...");
-            $this->connectToMySQL();
         } else {
+            $this->connectedToMySQL = true;
             $this->getLogger()->info("Successfully connected to MySQL database!");
         }
     }
@@ -123,11 +125,17 @@ final class LunarAuth extends PluginBase {
             if($this->getConfig()->getNested("mysql.enabled") == true) {
                 $this->provider = "MySQL";
                 $this->connectToMySQL();
-                $this->usersDatabase = $this->databaseMySQL;
-                mysqli_query($this->usersDatabase, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
+                if($this->connectedToMySQL == true) {
+                    $this->usersDatabase = $this->databaseMySQL;
+                    mysqli_query($this->usersDatabase, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
+                } else {
+                    $this->setEnabled(false);
+                    return;
+                }
             } else {
                 $this->getLogger()->critical("You have selected MySQL as provider, but not enabled it. Disabling plugin.");
-                return $this->setEnabled(false);
+                $this->setEnabled(false);
+                return;
             }
         } elseif($this->getConfig()->getNested("settings.provider") == "json") {
             $this->provider = "JSON";
@@ -137,7 +145,8 @@ final class LunarAuth extends PluginBase {
             $this->usersDatabase = new Config($this->getDataFolder() . "data/users.yml", Config::YAML);
         } else {
             $this->getLogger()->critical("Undefined provider: " . $this->getConfig()->getNested("settings.provider") . " Disabling plugin.");
-            return $this->setEnabled(false);
+            $this->setEnabled(false);
+            return;
         }
         $this->getLogger()->debug("Using provider: " . $this->provider);
     }
@@ -148,6 +157,10 @@ final class LunarAuth extends PluginBase {
 
     private function getProvider(): string {
         return $this->provider;
+    }
+
+    private function isConnectedToMySQL(): bool {
+        return $this->connectedToMySQL;
     }
 
     public function getHash(): string {
@@ -435,7 +448,9 @@ final class LunarAuth extends PluginBase {
         if($this->getProvider() == "SQLite3") {
             $database->close();
         } elseif($this->getProvider() == "MySQL") {
-            mysqli_close($database);
+            if($this->isConnectedToMySQL() == true) {
+                mysqli_close($database);
+            }
         } elseif($this->getProvider() == "JSON") {
             $database->save();
         } elseif($this->getProvider() == "YAML") {
