@@ -123,8 +123,8 @@ final class LunarAuth extends PluginBase {
             if($this->getConfig()->getNested("mysql.enabled") == true) {
                 $this->provider = "MySQL";
                 $this->connectToMySQL();
-                mysqli_query($this->databaseMySQL, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
                 $this->usersDatabase = $this->databaseMySQL;
+                mysqli_query($this->usersDatabase, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
             } else {
                 $this->getLogger()->critical("You have selected MySQL as provider, but not enabled it. Disabling plugin.");
                 return $this->setEnabled(false);
@@ -212,7 +212,7 @@ final class LunarAuth extends PluginBase {
     public function getUserPassword(string $username): string {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
-        $password = null;
+        $password = "0";
         if($this->getProvider() == "SQLite3") {
             $password = $database->querySingle("SELECT `password` FROM `users` WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "MySQL") {
@@ -230,9 +230,7 @@ final class LunarAuth extends PluginBase {
     public function getUserAddress(string $username): string {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
-        $address = null
-        
-        ;
+        $address = "0";
         if($this->getProvider() == "SQLite3") {
             $address = $database->querySingle("SELECT `address` FROM `users` WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "MySQL") {
@@ -250,7 +248,7 @@ final class LunarAuth extends PluginBase {
     public function isUserRegistered(string $username): bool {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
-        $bool = null;
+        $bool = false;
         if($this->getProvider() == "SQLite3") {
             $query = $database->query("SELECT * FROM `users` WHERE `username` = '" . $username . "';");
             $result = $query->fetchArray(SQLITE3_ASSOC);
