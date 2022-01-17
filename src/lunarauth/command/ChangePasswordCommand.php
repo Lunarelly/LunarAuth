@@ -32,6 +32,10 @@ use function str_replace;
 
 class ChangePasswordCommand extends Command implements PluginIdentifiableCommand {
 
+    private $main;
+
+    private $aliases;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
         $this->setDescription("Change password command");
@@ -41,7 +45,7 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         parent::__construct("changepassword", $this->description, $this->usageMessage, $this->aliases);
     }
 
-    public function execute(CommandSender $sender, $alias, array $args) {
+    public function execute(CommandSender $sender, $commandLabel, array $args) {
         if(!($sender instanceof Player)) {
             return $sender->sendMessage("Only in-game!");
         }
@@ -50,8 +54,8 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         }
         $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($username) == false) {
-            return $sender->sendMessage($config->getNested("messages.userNotRegistred"));
+        if($this->main->isUserRegistered($username) == false) {
+            return $sender->sendMessage($config->getNested("messages.userNotRegistered"));
         }
         if($this->main->isUserAuthenticated($sender) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotLoggedIn"));
@@ -60,7 +64,7 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
             return $sender->sendMessage($this->usageMessage);
         }
         if($this->main->getConfig()->getNested("settings.encrypt") == true) {
-            $oldPassword = hash("sha512", $args[0]);
+            $oldPassword = hash($this->main->getHash(), $args[0]);
         } else {
             $oldPassword = $args[0];
         }

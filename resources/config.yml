@@ -1,21 +1,23 @@
 # LunarAuth plugin config
 
 # Config version. Don't change it!
-config-version: 1.2
+config-version: 1.3
 
 # Auth settings
 settings:
-  # Database provider. Availible providers: SQLite3, MySQL, JSON, YAML. I recommend to use SQLite3 for much performance on local. | Default: SQLite3
+  # Database provider. Available providers: SQLite3, MySQL, JSON, YAML. I recommend to use SQLite3 for much performance on local. | Default: SQLite3
   provider: "sqlite3"
-  # Encrypting passwords. (true - enable, false - disable) I highly recommend to keep it on true due to security reasons. | Algorithm: SHA512
+  # Encrypting passwords. (true - enable, false - disable) I highly recommend keeping it on true due to security reasons. | Algorithm: SHA512
   encrypt: true
   # IP Login. (true - enable, false - disable) | Default: true
   ipLogin: true
   # Authorization from chat, not only commands. (true - enable, false - disable) | Default: true
   chatAuth: true
-  # Does not allow to send passwords in chat when authorizated. Works only with chat auth enabled. (true - enable, false - disable) Do not use this with "encrypt" enabled due to server lags | Default: false
+  # Does not allow join from another online player nick. (true - enable, false - disable) | Default: true
+  singleAuth: true
+  # Does not allow sending passwords in chat when authorized. Works only with chat auth enabled. (true - enable, false - disable) Do not use this with "encrypt" enabled due to server lags | Default: false
   noPasswordsInChat: false
-  # Blindness and invisibility effect when not authorizated. (true - enable, false - disable) | Default: true
+  # Blindness and invisibility effect when not authorized. (true - enable, false - disable) | Default: true
   effects: true
   # Minimal password length. (in symbols) | Default: 3
   minPasswordLength: 3
@@ -23,8 +25,10 @@ settings:
   maxPasswordLength: 30
   # Maximal count of login attempts. (invalid password) | Default: 5
   maxLoginAttempts: 5
-  # When player is not authorizated in your value, server kicks him. (in seconds) | Default: 120
+  # When player is not authorized in your value, server kicks him. (in seconds) | Default: 120
   loginTimeout: 120
+  # Interval for auth messages. (in seconds) | Default: 10
+  messageInterval: 10
 
 # MySQL auth settings (change provider in settings to "mysql")
 mysql:
@@ -41,9 +45,38 @@ mysql:
   # MySQL port
   port: 3306
 
+# Auth events
+events:
+  # Can player move while not authorized? (true - enable, false - disable) | Default: false
+  canMove: false
+  # Can player use commands while not authorized? (true - enable, false - disable) | Default: false
+  canUseCommands: false
+  # Can drop items while not authorized? (true - enable, false - disable) | Default: false
+  canDropItems: false
+  # Can player interact while not authorized? (true - enable, false - disable) | Default: false
+  canInteract: false
+  # Can player use consumable items while not authorized? (true - enable, false - disable) | Default: false
+  canUseConsumableItems: false
+  # Can player pick up experience while not authorized? (true - enable, false - disable) | Default: false
+  canPickupExperience: false
+  # Can player use beds while not authorized? (true - enable, false - disable) | Default: false
+  canUseBeds: false
+  # Can player get achievements while not authorized? (true - enable, false - disable) | Default: false
+  canGetAchievements: false
+  # Can player get exhausted while not authorized? (true - enable, false - disable) | Default: false
+  canGetExhausted: false
+  # Can player break blocks while not authorized? (true - enable, false - disable) | Default: false
+  canBreakBlocks: false
+  # Can player place blocks while not authorized? (true - enable, false - disable) | Default: false
+  canPlaceBlocks: false
+  # Can player be damaged while not authorized? (true - enable, false - disable) | Default: false
+  canBeDamaged: false
+  # Can player give damage while not authorized? (true - enable, false - disable) | Default: false
+  canGiveDamage: false
+
 # Auth messages
 messages:
-  # This message will be shown on player join. Availible tags: {USER} - player's nickname
+  # This message will be shown on player join. Available tags: {USER} - player's nickname
   joinMessage: "Welcome to the server, {USER}!"
   # This message will be shown when player is need to login.
   userLogin: "Please, authenticate using /login <password>"
@@ -57,22 +90,22 @@ messages:
   successfulAuthorization: "You have been logged in by your IP!"
   # This message will be shown when player is logged in by password.
   successfulLogin: "You have been logged in!"
-  # This message will be shown when player is registred. Availible tags: {PASSWORD} - player's password
-  successfulRegistration: "You have been registred! Your password: {PASSWORD}"
-  # This message will be shown when player is changed his password. Availible tags: {PASSWORD} - player's new password
+  # This message will be shown when player is registered. Available tags: {PASSWORD} - player's password
+  successfulRegistration: "You have been registered! Your password: {PASSWORD}"
+  # This message will be shown when player is changed his password. Available tags: {PASSWORD} - player's new password
   successfulPasswordChange: "You have changed your password! New password: {PASSWORD}"
   # This message will be shown on user account removing.
   successfulUserRemove: "You have successfully removed {USER}'s account!"
   # This message will be shown on user info command output
   userInfo: "User: {USER} {EOL}Password: {PASSWORD} {EOL}IP: {IP}"
-  # This message will be shown if player is not registred.
-  userNotRegistred: "You are not registred!"
-  # This message will be shown if user is not registred.
-  userNotRegistredConsole: "User is not registred!"
+  # This message will be shown if player is not registered.
+  userNotRegistred: "You are not registered!"
+  # This message will be shown if user is not registered.
+  userNotRegistredConsole: "User is not registered!"
   # This message will be shown if player is already logged in.
   userAlreadyLoggedIn: "You are already logged in!"
-  # This message will be shown if player is already registred.
-  userAlreadyRegistred: "You are already registred!"
+  # This message will be shown if player is already registered.
+  userAlreadyRegistred: "You are already registered!"
   # This message will be shown if player has sent incorrect password.
   incorrectPassword: "Incorrect password!"
   # This message will be shown if player's passwords doesn't match.

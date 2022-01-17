@@ -28,13 +28,7 @@ class PlayerAuthorizationEvent extends PlayerEvent implements Cancellable {
 
     public static $handlerList = null;
 
-    public static $owner = "LunarAuth";
-
     public function __construct(Player $player) {
         $this->player = $player;
-    }
-
-    public static function getOwner() {
-        return $this->owner;
     }
 }

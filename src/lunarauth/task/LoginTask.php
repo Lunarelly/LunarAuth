@@ -26,25 +26,22 @@ use function strtolower;
 
 class LoginTask extends PluginTask {
 
+    private $main;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
-        $this->notAuthenticatedTimeout = array();
         parent::__construct($main);
     }
 
     public function onRun($currentTick) {
         foreach(Server::getInstance()->getOnlinePlayers() as $players) {
             if($this->main->isUserAuthenticated($players) == false) {
-                $name = strtolower($players->getName());
                 $config = $this->main->getConfig();
-                if(!(isset($this->notAuthenticatedTimeout[$name]))) {
-                    $this->notAuthenticatedTimeout[$name] = 0;
-                }
-                $this->notAuthenticatedTimeout[$name]++;
-                if($this->notAuthenticatedTimeout[$name] >= $config->getNested("settings.loginTimeout")) {
+                $this->main->addUserLoginTime($players, 1);
+                if($this->main->getUserLoginTime($players) >= $config->getNested("settings.loginTimeout")) {
                     $this->main->removeAuthenticatedUser($players);
                     $this->main->removeUserLoginAttempts($players);
-                    unset($this->notAuthenticatedTimeout[$name]);
+                    $this->main->removeUserLoginTime($players);
                     $players->kick($config->getNested("kicks.loginTimeout"), false);
                 }
             }

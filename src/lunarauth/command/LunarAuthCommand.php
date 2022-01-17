@@ -30,6 +30,10 @@ use function strtolower;
 
 class LunarAuthCommand extends Command implements PluginIdentifiableCommand {
 
+    private $main;
+
+    private $aliases;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
         $this->setDescription("LunarAuth command");
@@ -39,7 +43,7 @@ class LunarAuthCommand extends Command implements PluginIdentifiableCommand {
         parent::__construct("lunarauth", $this->description, $this->usageMessage, $this->aliases);
     }
 
-    public function execute(CommandSender $sender, $alias, array $args) {
+    public function execute(CommandSender $sender, $commandLabel, array $args) {
         if(!($this->testPermission($sender))) {
             return false;
         }

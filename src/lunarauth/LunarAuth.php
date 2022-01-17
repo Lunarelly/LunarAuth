@@ -34,16 +34,14 @@ use lunarauth\{
     event\PlayerAuthorizationEvent,
     listener\ChatAuthListener,
     listener\EventListener,
-    task\LoginTask
+    task\LoginTask,
+    task\MessageTask
 };
-
-use mysqli;
 
 use function mysqli_connect_errno;
 use function mysqli_connect_error;
 use function mysqli_connect;
 use function mysqli_query;
-use function mysqli_error;
 use function mysqli_close;
 use function mysqli_fetch_array;
 
@@ -52,13 +50,15 @@ use function hash;
 
 final class LunarAuth extends PluginBase {
 
-    public static $instance = null;
+    public $instance = null;
 
-    public $databaseMySQL;
+    private $databaseMySQL;
 
-    public $provider = null;
+    private $provider;
 
-    public $usersDatabase = null;
+    private $usersDatabase;
+
+    public $hash = "sha512";
 
     public $prefix = "[LunarAuth]";
 
@@ -66,7 +66,11 @@ final class LunarAuth extends PluginBase {
 
     public $loginAttempts = array();
 
-    public static function getInstance() {
+    public $loginTime = array();
+
+    public $loginMessageTime = array();
+
+    public function getInstance() {
         self::$instance = $this;
     }
 
@@ -88,6 +92,7 @@ final class LunarAuth extends PluginBase {
 
     private function scheduleTasks() {
         Server::getInstance()->getScheduler()->scheduleRepeatingTask(new LoginTask($this), 20);
+        Server::getInstance()->getScheduler()->scheduleRepeatingTask(new MessageTask($this), 20);
     }
 
     private function connectToMySQL() {
@@ -118,6 +123,7 @@ final class LunarAuth extends PluginBase {
             if($this->getConfig()->getNested("mysql.enabled") == true) {
                 $this->provider = "MySQL";
                 $this->connectToMySQL();
+                mysqli_query($this->databaseMySQL, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
                 $this->usersDatabase = $this->databaseMySQL;
             } else {
                 $this->getLogger()->critical("You have selected MySQL as provider, but not enabled it. Disabling plugin.");
@@ -140,8 +146,12 @@ final class LunarAuth extends PluginBase {
         return $this->usersDatabase;
     }
 
-    private function getProvider() {
+    private function getProvider(): string {
         return $this->provider;
+    }
+
+    public function getHash(): string {
+        return $this->hash;
     }
 
     public function checkUserData(string $username) {
@@ -164,7 +174,7 @@ final class LunarAuth extends PluginBase {
 
     public function setUserPassword(string $username, string $password) {
         if($this->getConfig()->getNested("settings.encrypt") == true) {
-            $password = hash("sha512", $password);
+            $password = hash($this->getHash(), $password);
         }
         $username = strtolower($username);
         $this->checkUserData($username);
@@ -199,9 +209,10 @@ final class LunarAuth extends PluginBase {
         }
     }
 
-    public function getUserPassword(string $username) {
+    public function getUserPassword(string $username): string {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
+        $password = null;
         if($this->getProvider() == "SQLite3") {
             $password = $database->querySingle("SELECT `password` FROM `users` WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "MySQL") {
@@ -216,9 +227,12 @@ final class LunarAuth extends PluginBase {
         return $password;
     }
 
-    public function getUserAddress(string $username) {
+    public function getUserAddress(string $username): string {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
+        $address = null
+        
+        ;
         if($this->getProvider() == "SQLite3") {
             $address = $database->querySingle("SELECT `address` FROM `users` WHERE `username` = '" . $username . "';");
         } elseif($this->getProvider() == "MySQL") {
@@ -233,9 +247,10 @@ final class LunarAuth extends PluginBase {
         return $address;
     }
 
-    public function isUserRegistred(string $username) {
+    public function isUserRegistered(string $username): bool {
         $username = strtolower($username);
         $database = $this->getUsersDatabase();
+        $bool = null;
         if($this->getProvider() == "SQLite3") {
             $query = $database->query("SELECT * FROM `users` WHERE `username` = '" . $username . "';");
             $result = $query->fetchArray(SQLITE3_ASSOC);
@@ -268,7 +283,7 @@ final class LunarAuth extends PluginBase {
         return $bool;
     }
 
-    public function isUserAuthenticated(Player $player) {
+    public function isUserAuthenticated(Player $player): bool {
         $username = strtolower($player->getName());
         if(!(isset($this->authenticated[$username]))) {
             $bool = false;
@@ -297,7 +312,7 @@ final class LunarAuth extends PluginBase {
         }
     }
 
-    public function getUserLoginAttempts(Player $player) {
+    public function getUserLoginAttempts(Player $player): int {
         $username = strtolower($player->getName());
         if(!(isset($this->loginAttempts[$username]))) {
             $attempts = 0;
@@ -319,10 +334,56 @@ final class LunarAuth extends PluginBase {
             unset($this->loginAttempts[$username]);
         }
     }
+
+    public function getUserLoginTime(Player $player): int {
+        $username = strtolower($player->getName());
+        if(!(isset($this->loginTime[$username]))) {
+            $time = 0;
+        } else {
+            $time = $this->loginTime[$username];
+        }
+        return $time;
+    }
+
+    public function addUserLoginTime(Player $player, int $value) {
+        $username = strtolower($player->getName());
+        $time = $this->getUserLoginTime($player);
+        $this->loginTime[$username] = $time + $value;
+    }
+
+    public function removeUserLoginTime(Player $player) {
+        $username = strtolower($player->getName());
+        if(isset($this->loginTime[$username])) {
+            unset($this->loginTime[$username]);
+        }
+    }
+
+    public function getUserLoginMessageTime(Player $player): int {
+        $username = strtolower($player->getName());
+        if(!(isset($this->loginMessageTime[$username]))) {
+            $time = 0;
+        } else {
+            $time = $this->loginMessageTime[$username];
+        }
+        return $time;
+    }
+
+    public function addUserLoginMessageTime(Player $player, int $value) {
+        $username = strtolower($player->getName());
+        $time = $this->getUserLoginMessageTime($player);
+        $this->loginMessageTime[$username] = $time + $value;
+    }
+
+    public function removeUserLoginMessageTime(Player $player) {
+        $username = strtolower($player->getName());
+        if(isset($this->loginMessageTime[$username])) {
+            unset($this->loginMessageTime[$username]);
+        }
+    }
     
     public function registerUser(Player $player, string $password) {
         if($this->getConfig()->getNested("settings.encrypt") == true) {
-            $password = hash("sha512", $password);
+            $password = hash($this->getHash(), $password);
         }
         $username = strtolower($player->getName());
         $address = $player->getAddress();

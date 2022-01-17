@@ -31,6 +31,10 @@ use function str_replace;
 
 class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
 
+    private $main;
+
+    private $aliases;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
         $this->setDescription("Remove user command");
@@ -40,7 +44,7 @@ class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
         parent::__construct("removeuser", $this->description, $this->usageMessage, $this->aliases);
     }
 
-    public function execute(CommandSender $sender, $alias, array $args) {
+    public function execute(CommandSender $sender, $commandLabel, array $args) {
         if(!($this->testPermission($sender))) {
             return false;
         }
@@ -52,8 +56,8 @@ class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
         }
         $username = strtolower($args[0]);
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($username) == false) {
-            return $sender->sendMessage($config->getNested("messages.userNotRegistredConsole"));
+        if($this->main->isUserRegistered($username) == false) {
+            return $sender->sendMessage($config->getNested("messages.userNotRegisteredConsole"));
         }
         $this->main->removeUser($username);
         $sender->sendMessage(str_replace("{USER}", $username, $config->getNested("messages.successfulUserRemove")));

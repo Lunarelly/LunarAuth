@@ -31,6 +31,10 @@ use function hash;
 
 class LoginCommand extends Command implements PluginIdentifiableCommand {
 
+    private $main;
+
+    private $aliases;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
         $this->setDescription("Login command");
@@ -40,7 +44,7 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
         parent::__construct("login", $this->description, $this->usageMessage, $this->aliases);
     }
 
-    public function execute(CommandSender $sender, $alias, array $args) {
+    public function execute(CommandSender $sender, $commandLabel, array $args) {
         if(!($sender instanceof Player)) {
             return $sender->sendMessage("Only in-game!");
         }
@@ -49,8 +53,8 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
         }
         $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($username) == false) {
-            return $sender->sendMessage($config->getNested("messages.userNotRegistred"));
+        if($this->main->isUserRegistered($username) == false) {
+            return $sender->sendMessage($config->getNested("messages.userNotRegistered"));
         }
         if($this->main->isUserAuthenticated($sender) == true) {
             return $sender->sendMessage($config->getNested("messages.userAlreadyLoggedIn"));
@@ -59,7 +63,7 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
             return $sender->sendMessage($this->usageMessage);
         }
         if($this->main->getConfig()->getNested("settings.encrypt") == true) {
-            $password = hash("sha512", $args[0]);
+            $password = hash($this->main->getHash(), $args[0]);
         } else {
             $password = $args[0];
         }

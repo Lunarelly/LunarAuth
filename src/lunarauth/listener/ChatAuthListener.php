@@ -31,6 +31,8 @@ use function preg_match;
 
 class ChatAuthListener implements Listener {
 
+    private $main;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
     }
@@ -44,7 +46,7 @@ class ChatAuthListener implements Listener {
                 if($config->getNested("settings.noPasswordsInChat") == true) {
                     $message = explode(" ", $event->getMessage());
                     if($this->main->getConfig()->getNested("settings.encrypt") == true) {
-                        $password = hash("sha512", $message[0]);
+                        $password = hash($this->main->getHash(), $message[0]);
                     } else {
                         $password = $message[0];
                     }
@@ -56,7 +58,7 @@ class ChatAuthListener implements Listener {
             } elseif($this->main->isUserAuthenticated($player) == false) {
                 $event->setCancelled(true);
                 $message = explode(" ", $event->getMessage());
-                if($this->main->isUserRegistred($username) == false) {
+                if($this->main->isUserRegistered($username) == false) {
                     if(empty($message) or !(isset($message[0])) or !(isset($message[1]))) {
                         return $player->sendMessage($config->getNested("usages.chatRegister"));
                     }
@@ -79,7 +81,7 @@ class ChatAuthListener implements Listener {
                         return $player->sendMessage($config->getNested("usages.chatLogin"));
                     }
                     if($this->main->getConfig()->getNested("settings.encrypt") == true) {
-                        $password = hash("sha512", $message[0]);
+                        $password = hash($this->main->getHash(), $message[0]);
                     } else {
                         $password = $message[0];
                     }

@@ -33,6 +33,10 @@ use function str_replace;
 
 class RegisterCommand extends Command implements PluginIdentifiableCommand {
 
+    private $main;
+
+    private $aliases;
+
     public function __construct(LunarAuth $main) {
         $this->main = $main;
         $this->setDescription("Register command");
@@ -42,7 +46,7 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand {
         parent::__construct("register", $this->description, $this->usageMessage, $this->aliases);
     }
 
-    public function execute(CommandSender $sender, $alias, array $args) {
+    public function execute(CommandSender $sender, $commandLabel, array $args) {
         if(!($sender instanceof Player)) {
             return $sender->sendMessage("Only in-game!");
         }
@@ -51,8 +55,8 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand {
         }
         $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistred($username) == true) {
-            return $sender->sendMessage($config->getNested("messages.userAlreadyRegistred"));
+        if($this->main->isUserRegistered($username) == true) {
+            return $sender->sendMessage($config->getNested("messages.userAlreadyRegistered"));
         }
         if($this->main->isUserAuthenticated($sender) == true) {
             return $sender->sendMessage($config->getNested("messages.userAlreadyLoggedIn"));
