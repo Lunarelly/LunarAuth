@@ -31,48 +31,49 @@ use function strtolower;
 use function preg_match;
 use function str_replace;
 
-class RegisterCommand extends Command implements PluginIdentifiableCommand {
+class RegisterCommand extends Command implements PluginIdentifiableCommand
+{
 
     private $main;
 
-    private $aliases;
-
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         $this->setDescription("Register command");
         $this->setPermission("lunarauth.command.register");
         $this->setUsage($this->main->getConfig()->getNested("usages.register"));
         $this->aliases = ["r", "reg"];
-        parent::__construct("register", $this->description, $this->usageMessage, $this->aliases);
+        parent::__construct("register", $this->description, $this->usageMessage, $this->getAliases());
     }
 
-    public function execute(CommandSender $sender, $commandLabel, array $args) {
-        if(!($sender instanceof Player)) {
+    public function execute(CommandSender $sender, $commandLabel, array $args): bool
+    {
+        if (!($sender instanceof Player)) {
             return $sender->sendMessage("Only in-game!");
         }
-        if(!($this->testPermission($sender))) {
+        if (!($this->testPermission($sender))) {
             return false;
         }
         $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistered($username) == true) {
+        if ($this->main->isUserRegistered($username) == true) {
             return $sender->sendMessage($config->getNested("messages.userAlreadyRegistered"));
         }
-        if($this->main->isUserAuthenticated($sender) == true) {
+        if ($this->main->isUserAuthenticated($sender) == true) {
             return $sender->sendMessage($config->getNested("messages.userAlreadyLoggedIn"));
         }
-        if(empty($args) or !(isset($args[0])) or !(isset($args[1]))) {
+        if (empty($args) or !(isset($args[0])) or !(isset($args[1]))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        if(preg_match("/^[\x{0020}-\x{007E}]*$/", $args[0]) == 0 or preg_match("/^[\x{0020}-\x{007E}]*$/", $args[1]) == 0) {
+        if (preg_match("/^[\x{0020}-\x{007E}]*$/", $args[0]) == 0 or preg_match("/^[\x{0020}-\x{007E}]*$/", $args[1]) == 0) {
             return $sender->sendMessage($config->getNested("messages.invalidPasswordSymbols"));
         }
         $minLength = $config->getNested("settings.minPasswordLength");
         $maxLength = $config->getNested("settings.maxPasswordLength");
-        if(strlen($args[0]) < $minLength or strlen($args[0]) > $maxLength or strlen($args[1]) < $minLength or strlen($args[1]) > $maxLength) {
+        if (strlen($args[0]) < $minLength or strlen($args[0]) > $maxLength or strlen($args[1]) < $minLength or strlen($args[1]) > $maxLength) {
             return $sender->sendMessage($config->getNested("messages.invalidPasswordLength"));
         }
-        if(!($args[0] === $args[1])) {
+        if (!($args[0] === $args[1])) {
             return $sender->sendMessage($config->getNested("messages.passwordsDoesNotMatch"));
         }
         $password = $args[0];
@@ -81,7 +82,8 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand {
         return true;
     }
 
-    public function getPlugin() {
+    public function getPlugin(): LunarAuth
+    {
         return $this->main;
     }
 }

@@ -26,43 +26,45 @@ use pocketmine\command\{
 use lunarauth\LunarAuth;
 
 use function in_array;
-use function strtolower;
 
-class LunarAuthCommand extends Command implements PluginIdentifiableCommand {
+class LunarAuthCommand extends Command implements PluginIdentifiableCommand
+{
 
     private $main;
 
-    private $aliases;
-
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         $this->setDescription("LunarAuth command");
         $this->setPermission("lunarauth.command.default");
         $this->setUsage($this->main->getConfig()->getNested("usages.default"));
-        $this->aliases = ["la", "auth"];
-        parent::__construct("lunarauth", $this->description, $this->usageMessage, $this->aliases);
+        $this->setAliases(["la", "auth"]);
+        parent::__construct("lunarauth", $this->description, $this->usageMessage, $this->getAliases());
     }
 
-    public function execute(CommandSender $sender, $commandLabel, array $args) {
-        if(!($this->testPermission($sender))) {
+    public function execute(CommandSender $sender, $commandLabel, array $args): bool
+    {
+        if (!($this->testPermission($sender))) {
             return false;
         }
         $subcommands = ["help", "info"];
-        if(empty($args) or !(isset($args[0])) or !(in_array($args[0], $subcommands))) {
+        if (empty($args) or !(isset($args[0])) or !(in_array($args[0], $subcommands))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        if($args[0] == "help") {
+        if ($args[0] == "help") {
             return $sender->sendMessage($this->main->prefix . " Commands: /register, /login, /changepassword, /removeuser, /userinfo");
         }
-        if($args[0] == "info") {
+        if ($args[0] == "info") {
             $description = $this->main->getDescription();
             $name = $description->getName();
             $version = $description->getVersion();
             return $sender->sendMessage($this->main->prefix . " This server is running " . $name . " v" . $version . "\nAuthor: Lunarelly\nGitHub: https://github.com/Lunarelly");
         }
+        return true;
     }
 
-    public function getPlugin() {
+    public function getPlugin(): LunarAuth
+    {
         return $this->main;
     }
 }

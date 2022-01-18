@@ -29,22 +29,23 @@ use lunarauth\LunarAuth;
 use function strtolower;
 use function str_replace;
 
-class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
+class RemoveUserCommand extends Command implements PluginIdentifiableCommand
+{
 
     private $main;
 
-    private $aliases;
-
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         $this->setDescription("Remove user command");
         $this->setPermission("lunarauth.command.removeuser");
         $this->setUsage($this->main->getConfig()->getNested("usages.removeuser"));
-        $this->aliases = ["deluser", "rmuser"];
-        parent::__construct("removeuser", $this->description, $this->usageMessage, $this->aliases);
+        $this->setAliases(["deluser", "rmuser"]);
+        parent::__construct("removeuser", $this->description, $this->usageMessage, $this->getAliases());
     }
 
-    public function execute(CommandSender $sender, $commandLabel, array $args) {
+    public function execute(CommandSender $sender, $commandLabel, array $args): bool
+    {
         if(!($this->testPermission($sender))) {
             return false;
         }
@@ -64,7 +65,8 @@ class RemoveUserCommand extends Command implements PluginIdentifiableCommand {
         return true;
     }
 
-    public function getPlugin() {
+    public function getPlugin(): LunarAuth
+    {
         return $this->main;
     }
 }

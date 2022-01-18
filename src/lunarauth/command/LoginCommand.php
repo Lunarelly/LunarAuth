@@ -29,52 +29,52 @@ use lunarauth\LunarAuth;
 use function strtolower;
 use function hash;
 
-class LoginCommand extends Command implements PluginIdentifiableCommand {
+class LoginCommand extends Command implements PluginIdentifiableCommand
+{
 
     private $main;
 
-    private $aliases;
-
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         $this->setDescription("Login command");
         $this->setPermission("lunarauth.command.login");
         $this->setUsage($this->main->getConfig()->getNested("usages.login"));
-        $this->aliases = ["l", "log"];
-        parent::__construct("login", $this->description, $this->usageMessage, $this->aliases);
+        $this->setAliases(["l", "log"]);
+        parent::__construct("login", $this->description, $this->usageMessage, $this->getAliases());
     }
 
-    public function execute(CommandSender $sender, $commandLabel, array $args) {
-        if(!($sender instanceof Player)) {
+    public function execute(CommandSender $sender, $commandLabel, array $args): bool
+    {
+        if (!($sender instanceof Player)) {
             return $sender->sendMessage("Only in-game!");
         }
-        if(!($this->testPermission($sender))) {
+        if (!($this->testPermission($sender))) {
             return false;
         }
         $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistered($username) == false) {
+        if ($this->main->isUserRegistered($username) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotRegistered"));
         }
-        if($this->main->isUserAuthenticated($sender) == true) {
+        if ($this->main->isUserAuthenticated($sender) == true) {
             return $sender->sendMessage($config->getNested("messages.userAlreadyLoggedIn"));
         }
-        if(empty($args) or !(isset($args[0]))) {
+        if (empty($args) or !(isset($args[0]))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        if($this->main->getConfig()->getNested("settings.encrypt") == true) {
+        if ($this->main->getConfig()->getNested("settings.encrypt") == true) {
             $password = hash($this->main->getHash(), $args[0]);
         } else {
             $password = $args[0];
         }
-        if(!($password === $this->main->getUserPassword($username))) {
-            if($this->main->getUserLoginAttempts($sender) >= $config->getNested("settings.maxLoginAttempts")) {
+        if (!($password === $this->main->getUserPassword($username))) {
+            if ($this->main->getUserLoginAttempts($sender) >= $config->getNested("settings.maxLoginAttempts")) {
                 $this->main->removeUserLoginAttempts($sender);
                 return $sender->kick($config->getNested("kicks.tooManyLoginAttempts"), false);
-            } else {
-                $this->main->addUserLoginAttempt($sender, 1);
-                return $sender->sendMessage($config->getNested("messages.incorrectPassword"));
             }
+            $this->main->addUserLoginAttempt($sender, 1);
+            return $sender->sendMessage($config->getNested("messages.incorrectPassword"));
         }
         $this->main->loginUser($sender);
         $sender->sendMessage($config->getNested("messages.successfulLogin"));
@@ -82,7 +82,8 @@ class LoginCommand extends Command implements PluginIdentifiableCommand {
         return true;
     }
 
-    public function getPlugin() {
+    public function getPlugin(): LunarAuth
+    {
         return $this->main;
     }
 }

@@ -22,23 +22,24 @@ use pocketmine\scheduler\PluginTask;
 use pocketmine\Server;
 use lunarauth\LunarAuth;
 
-use function strtolower;
-
-class LoginTask extends PluginTask {
+class LoginTask extends PluginTask
+{
 
     private $main;
 
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         parent::__construct($main);
     }
 
-    public function onRun($currentTick) {
-        foreach(Server::getInstance()->getOnlinePlayers() as $players) {
-            if($this->main->isUserAuthenticated($players) == false) {
+    public function onRun($currentTick)
+    {
+        foreach (Server::getInstance()->getOnlinePlayers() as $players) {
+            if ($this->main->isUserAuthenticated($players) == false) {
                 $config = $this->main->getConfig();
                 $this->main->addUserLoginTime($players, 1);
-                if($this->main->getUserLoginTime($players) >= $config->getNested("settings.loginTimeout")) {
+                if ($this->main->getUserLoginTime($players) >= $config->getNested("settings.loginTimeout")) {
                     $this->main->removeAuthenticatedUser($players);
                     $this->main->removeUserLoginAttempts($players);
                     $this->main->removeUserLoginTime($players);

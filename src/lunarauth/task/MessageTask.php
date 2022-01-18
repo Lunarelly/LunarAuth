@@ -24,31 +24,34 @@ use lunarauth\LunarAuth;
 
 use function strtolower;
 
-class MessageTask extends PluginTask {
+class MessageTask extends PluginTask
+{
 
     private $main;
 
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         parent::__construct($main);
     }
 
-    public function onRun($currentTick) {
-        foreach(Server::getInstance()->getOnlinePlayers() as $players) {
-            if($this->main->isUserAuthenticated($players) == false) {
+    public function onRun($currentTick)
+    {
+        foreach (Server::getInstance()->getOnlinePlayers() as $players) {
+            if ($this->main->isUserAuthenticated($players) == false) {
                 $config = $this->main->getConfig();
                 $username = strtolower($players->getName());
                 $this->main->addUserLoginMessageTime($players, 1);
-                if($this->main->getUserLoginMessageTime($players) >= $config->getNested("settings.messageInterval")) {
+                if ($this->main->getUserLoginMessageTime($players) >= $config->getNested("settings.messageInterval")) {
                     $this->main->removeUserLoginMessageTime($players);
-                    if($this->main->isUserRegistered($username) == false) {
-                        if($config->getNested("settings.chatAuth") == true) {
+                    if ($this->main->isUserRegistered($username) == false) {
+                        if ($config->getNested("settings.chatAuth") == true) {
                             $players->sendMessage($config->getNested("messages.userChatRegistration"));
                         } else {
                             $players->sendMessage($config->getNested("messages.userRegistration"));
                         }
                     } else {
-                        if($config->getNested("settings.chatAuth") == true) {
+                        if ($config->getNested("settings.chatAuth") == true) {
                             $players->sendMessage($config->getNested("messages.userChatLogin"));
                         } else {
                             $players->sendMessage($config->getNested("messages.userLogin"));

@@ -24,11 +24,13 @@ use pocketmine\event\{
 };
 use pocketmine\Player;
 
-class PlayerAuthorizationEvent extends PlayerEvent implements Cancellable {
+class PlayerAuthorizationEvent extends PlayerEvent implements Cancellable
+{
 
     public static $handlerList = null;
 
-    public function __construct(Player $player) {
+    public function __construct(Player $player)
+    {
         $this->player = $player;
     }
 }

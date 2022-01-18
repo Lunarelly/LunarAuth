@@ -30,54 +30,55 @@ use function strtolower;
 use function preg_match;
 use function str_replace;
 
-class ChangePasswordCommand extends Command implements PluginIdentifiableCommand {
+class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
+{
 
     private $main;
 
-    private $aliases;
-
-    public function __construct(LunarAuth $main) {
+    public function __construct(LunarAuth $main)
+    {
         $this->main = $main;
         $this->setDescription("Change password command");
         $this->setPermission("lunarauth.command.changepassword");
         $this->setUsage($this->main->getConfig()->getNested("usages.changepassword"));
-        $this->aliases = ["cp", "chp", "ch"];
-        parent::__construct("changepassword", $this->description, $this->usageMessage, $this->aliases);
+        $this->setAliases(["cp", "chp", "ch"]);
+        parent::__construct("changepassword", $this->description, $this->usageMessage, $this->getAliases());
     }
 
-    public function execute(CommandSender $sender, $commandLabel, array $args) {
-        if(!($sender instanceof Player)) {
+    public function execute(CommandSender $sender, $commandLabel, array $args): bool
+    {
+        if (!($sender instanceof Player)) {
             return $sender->sendMessage("Only in-game!");
         }
-        if(!($this->testPermission($sender))) {
+        if (!($this->testPermission($sender))) {
             return false;
         }
         $username = strtolower($sender->getName());
         $config = $this->main->getConfig();
-        if($this->main->isUserRegistered($username) == false) {
+        if ($this->main->isUserRegistered($username) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotRegistered"));
         }
-        if($this->main->isUserAuthenticated($sender) == false) {
+        if ($this->main->isUserAuthenticated($sender) == false) {
             return $sender->sendMessage($config->getNested("messages.userNotLoggedIn"));
         }
-        if(empty($args) or !(isset($args[0])) or !(isset($args[1]))) {
+        if (empty($args) or !(isset($args[0])) or !(isset($args[1]))) {
             return $sender->sendMessage($this->usageMessage);
         }
-        if($this->main->getConfig()->getNested("settings.encrypt") == true) {
+        if ($this->main->getConfig()->getNested("settings.encrypt") == true) {
             $oldPassword = hash($this->main->getHash(), $args[0]);
         } else {
             $oldPassword = $args[0];
         }
         $newPassword = $args[1];
-        if(!($oldPassword === $this->main->getUserPassword($username))) {
+        if (!($oldPassword === $this->main->getUserPassword($username))) {
             return $sender->sendMessage($config->getNested("messages.incorrectPassword"));
         }
-        if(preg_match("/^[\x{0020}-\x{007E}]*$/", $newPassword) == 0) {
+        if (preg_match("/^[\x{0020}-\x{007E}]*$/", $newPassword) == 0) {
             return $sender->sendMessage($config->getNested("messages.invalidPasswordSymbols"));
         }
         $minLength = $this->main->getConfig()->getNested("settings.minPasswordLength");
         $maxLength = $this->main->getConfig()->getNested("settings.maxPasswordLength");
-        if(strlen($newPassword) < $minLength or strlen($newPassword) > $maxLength) {
+        if (strlen($newPassword) < $minLength or strlen($newPassword) > $maxLength) {
             return $sender->sendMessage($config->getNested("messages.invalidPasswordLength"));
         }
         $this->main->changeUserPassword($sender, $newPassword);
@@ -85,7 +86,8 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         return true;
     }
 
-    public function getPlugin() {
+    public function getPlugin(): LunarAuth
+    {
         return $this->main;
     }
 }
