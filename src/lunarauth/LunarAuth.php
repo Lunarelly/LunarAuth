@@ -1,25 +1,24 @@
 <?php
 
 /*
- *  _							    _ _	   
- * | |   _   _ _ __   __ _ _ __ ___| | |_   _ 
- * | |  | | | | '_ \ / _` | '__/ _ \ | | | | |
+ *  _                               _ _
+ * | |   _   _ _ __   __ _ _ __ ___| | |_   _
+ * | |  | | | |  _ \ / _  |  __/ _ \ | | | | |
  * | |__| |_| | | | | (_| | | |  __/ | | |_| |
- * |_____\__,_|_| |_|\__,_|_|  \___|_|_|\__, |
- *									    |___/ 
- * 
+ * |_____\____|_| |_|\____|_|  \___|_|_|\___ |
+ *                                      |___/
+ *
  * Author: Lunarelly
- * 
+ *
  * GitHub: https://github.com/Lunarelly
- * 
+ *
  * Telegram: https://t.me/lunarellyy
- * 
+ *
  */
 
 namespace lunarauth;
 
 use pocketmine\plugin\PluginBase;
-use pocketmine\utils\Config;
 use pocketmine\{
     Player,
     Server
@@ -34,18 +33,15 @@ use lunarauth\{
     event\PlayerAuthorizationEvent,
     listener\ChatAuthListener,
     listener\EventListener,
+    provider\DataProvider,
+    provider\JSONDataProvider,
+    provider\MySQLDataProvider,
+    provider\NullDataProvider,
+    provider\SQLite3DataProvider,
+    provider\YAMLDataProvider,
     task\LoginTask,
     task\MessageTask
 };
-
-use SQLite3;
-
-use function mysqli_connect_errno;
-use function mysqli_connect_error;
-use function mysqli_connect;
-use function mysqli_query;
-use function mysqli_close;
-use function mysqli_fetch_array;
 
 use function strtolower;
 use function hash;
@@ -53,33 +49,52 @@ use function hash;
 final class LunarAuth extends PluginBase
 {
 
+    /**
+     * @var mixed
+     */
     public static $instance;
 
-    private $databaseMySQL;
+    /**
+     * @var DataProvider
+     */
+    private $dataProvider;
 
-    private $connectedToMySQL;
-
-    private $provider;
-
-    private $usersDatabase;
-
-    public $hash = "sha512";
-
+    /**
+     * @var string
+     */
     public $prefix = "[LunarAuth]";
 
+    /**
+     * @var array
+     */
     public $authenticated = array();
 
+    /**
+     * @var array
+     */
     public $loginAttempts = array();
 
+    /**
+     * @var array
+     */
     public $loginTime = array();
 
+    /**
+     * @var array
+     */
     public $loginMessageTime = array();
 
+    /**
+     * @return LunarAuth
+     */
     public static function getInstance(): LunarAuth
     {
         return self::$instance;
     }
 
+    /**
+     * @return void
+     */
     private function registerCommands()
     {
         Server::getInstance()->getCommandMap()->registerAll("LunarAuth", array
@@ -93,231 +108,182 @@ final class LunarAuth extends PluginBase
         ));
     }
 
+    /**
+     * @return void
+     */
     private function registerListeners()
     {
         Server::getInstance()->getPluginManager()->registerEvents(new ChatAuthListener($this), $this);
         Server::getInstance()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
+    /**
+     * @return void
+     */
     private function scheduleTasks()
     {
         Server::getInstance()->getScheduler()->scheduleRepeatingTask(new LoginTask($this), 20);
         Server::getInstance()->getScheduler()->scheduleRepeatingTask(new MessageTask($this), 20);
     }
 
-    private function connectToMySQL()
+    /**
+     * @return void
+     */
+    public function setDataProvider(DataProvider $dataProvider)
     {
-        $config = $this->getConfig();
-        $this->databaseMySQL = mysqli_connect($config->getNested("mysql.ip"), $config->getNested("mysql.user"), $config->getNested("mysql.password"), $config->getNested("mysql.database"), $config->getNested("mysql.port"));
-        if (mysqli_connect_errno()) {
-            $this->connectedToMySQL = false;
-            $this->getLogger()->critical("Can't connect to database: " . mysqli_connect_error());
-        } else {
-            $this->connectedToMySQL = true;
-            $this->getLogger()->info("Successfully connected to MySQL database!");
-        }
+        $this->dataProvider = $dataProvider;
     }
 
+    /**
+     * @return void
+     */
     public function onEnable()
     {
         self::$instance = $this;
+
         $this->saveDefaultConfig();
         $this->registerCommands();
         $this->registerListeners();
         $this->scheduleTasks();
-        if (!(is_dir($this->getDataFolder() . "data"))) {
-            @mkdir($this->getDataFolder() . "data");
+
+        if (!(is_dir($this->getDataFolder()))) {
+            @mkdir($this->getDataFolder());
         }
-        if ($this->getConfig()->getNested("settings.provider") == "sqlite3") {
-            $this->provider = "SQLite3";
-            $this->usersDatabase = new SQLite3($this->getDataFolder() . "data/users.db");
-            $this->usersDatabase->query("CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
-        } elseif ($this->getConfig()->getNested("settings.provider") == "mysql") {
-            if ($this->getConfig()->getNested("mysql.enabled") == true) {
-                $this->provider = "MySQL";
-                $this->connectToMySQL();
-                if ($this->connectedToMySQL == true) {
-                    $this->usersDatabase = $this->databaseMySQL;
-                    mysqli_query($this->usersDatabase, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
+
+        switch (strtolower($this->getConfig()->getNested("settings.provider"))) {
+            case "sqlite3":
+                $this->dataProvider = new SQLite3DataProvider($this);
+                $this->getLogger()->debug("Using provider: SQLite3");
+                break;
+
+            case "mysql":
+                if ($this->getConfig()->getNested("mysql.enabled")) {
+                    $this->dataProvider = new MySQLDataProvider($this);
+                    $this->getLogger()->debug("Using provider: MySQL");
                 } else {
+                    $this->getLogger()->critical("You have selected MySQL as provider, but not enabled it. Disabling plugin.");
                     $this->setEnabled(false);
                     return;
                 }
-            } else {
-                $this->getLogger()->critical("You have selected MySQL as provider, but not enabled it. Disabling plugin.");
+                break;
+
+            case "json":
+                $this->dataProvider = new JSONDataProvider($this);
+                $this->getLogger()->debug("Using provider: JSON");
+                break;
+
+            case "yaml":
+                $this->dataProvider = new YAMLDataProvider($this);
+                $this->getLogger()->debug("Using provider: YAML");
+                break;
+
+            default:
+                $this->dataProvider = new NullDataProvider($this);
+                $this->getLogger()->critical("Unknown provider specified. Disabling plugin.");
                 $this->setEnabled(false);
-                return;
-            }
-        } elseif ($this->getConfig()->getNested("settings.provider") == "json") {
-            $this->provider = "JSON";
-            $this->usersDatabase = new Config($this->getDataFolder() . "data/users.json", Config::JSON);
-        } elseif ($this->getConfig()->getNested("settings.provider") == "yaml") {
-            $this->provider = "YAML";
-            $this->usersDatabase = new Config($this->getDataFolder() . "data/users.yml", Config::YAML);
-        } else {
-            $this->getLogger()->critical("Undefined provider: " . $this->getConfig()->getNested("settings.provider") . " Disabling plugin.");
-            $this->setEnabled(false);
-            return;
-        }
-        $this->getLogger()->debug("Using provider: " . $this->provider);
-    }
-
-    private function getUsersDatabase()
-    {
-        return $this->usersDatabase;
-    }
-
-    private function getProvider(): string
-    {
-        return $this->provider;
-    }
-
-    private function isConnectedToMySQL(): bool
-    {
-        return $this->connectedToMySQL;
-    }
-
-    public function getHash(): string
-    {
-        return $this->hash;
-    }
-
-    public function checkUserData(string $username)
-    {
-        $username = strtolower($username);
-        $database = $this->getUsersDatabase();
-        if ($this->getProvider() == "SQLite3") {
-            $query = $database->query("SELECT * FROM `users` WHERE `username` = '" . $username . "';");
-            $result = $query->fetchArray(SQLITE3_ASSOC);
-            if (!($result)) {
-                $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '0', '0')");
-            }
-        } elseif ($this->getProvider() == "MySQL") {
-            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
-            $result = mysqli_fetch_array($query);
-            if (!($result)) {
-                mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '0', '0')");
-            }
+                break;
         }
     }
 
+    /**
+     * @return DataProvider
+     */
+    private function getDataProvider(): DataProvider
+    {
+        return $this->dataProvider;
+    }
+
+    /**
+     * @param string $password
+     * @return string
+     */
+    public function hash(string $password): string
+    {
+        return hash("sha512", $password);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrefix(): string
+    {
+        return $this->prefix;
+    }
+
+    /**
+     * @param string $username
+     * @param string $password
+     * @return void
+     */
     public function setUserPassword(string $username, string $password)
     {
-        if ($this->getConfig()->getNested("settings.encrypt") == true) {
-            $password = hash($this->getHash(), $password);
+        if ($this->getConfig()->getNested("settings.encrypt")) {
+            $password = $this->hash($password);
         }
+
         $username = strtolower($username);
-        $this->checkUserData($username);
-        $database = $this->getUsersDatabase();
-        if ($this->getProvider() == "SQLite3") {
-            $database->exec("UPDATE `users` SET `password` = '" . $password . "' WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "MySQL") {
-            mysqli_query($database, "UPDATE `users` SET `password` = '" . $password . "' WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "JSON") {
-            $database->setNested($username . ".password", $password);
-            $database->save();
-        } elseif ($this->getProvider() == "YAML") {
-            $database->setNested($username . ".password", $password);
-            $database->save();
-        }
+        $provider = $this->getDataProvider();
+
+        $provider->setUserPassword($username, $password);
     }
 
+    /**
+     * @param string $username
+     * @param string $address
+     * @return void
+     */
     public function setUserAddress(string $username, string $address)
     {
         $username = strtolower($username);
-        $this->checkUserData($username);
-        $database = $this->getUsersDatabase();
-        if ($this->getProvider() == "SQLite3") {
-            $database->exec("UPDATE `users` SET `address` = '" . $address . "' WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "MySQL") {
-            mysqli_query($database, "UPDATE `users` SET `address` = '" . $address . "' WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "JSON") {
-            $database->setNested($username . ".address", $address);
-            $database->save();
-        } elseif ($this->getProvider() == "YAML") {
-            $database->setNested($username . ".address", $address);
-            $database->save();
-        }
+        $provider = $this->getDataProvider();
+
+        $provider->setUserAddress($username, $address);
     }
 
+    /**
+     * @param string $username
+     * @return string
+     */
     public function getUserPassword(string $username): string
     {
         $username = strtolower($username);
-        $database = $this->getUsersDatabase();
-        $password = "0";
-        if ($this->getProvider() == "SQLite3") {
-            $password = $database->querySingle("SELECT `password` FROM `users` WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "MySQL") {
-            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
-            $result = mysqli_fetch_array($query);
-            $password = $result["password"];
-        } elseif ($this->getProvider() == "JSON") {
-            $password = $database->getNested($username . ".password");
-        } elseif ($this->getProvider() == "YAML") {
-            $password = $database->getNested($username . ".password");
-        }
-        return $password;
+        $provider = $this->getDataProvider();
+
+        return $provider->getUserPassword($username);
     }
 
+    /**
+     * @param string $username
+     * @return string
+     */
     public function getUserAddress(string $username): string
     {
         $username = strtolower($username);
-        $database = $this->getUsersDatabase();
-        $address = "0";
-        if ($this->getProvider() == "SQLite3") {
-            $address = $database->querySingle("SELECT `address` FROM `users` WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "MySQL") {
-            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
-            $result = mysqli_fetch_array($query);
-            $address = $result["address"];
-        } elseif ($this->getProvider() == "JSON") {
-            $address = $database->getNested($username . ".address");
-        } elseif ($this->getProvider() == "YAML") {
-            $address = $database->getNested($username . ".address");
-        }
-        return $address;
+        $provider = $this->getDataProvider();
+
+        return $provider->getUserAddress($username);
     }
 
+    /**
+     * @param string $username
+     * @return bool
+     */
     public function isUserRegistered(string $username): bool
     {
         $username = strtolower($username);
-        $database = $this->getUsersDatabase();
-        $bool = null;
-        if ($this->getProvider() == "SQLite3") {
-            $query = $database->query("SELECT * FROM `users` WHERE `username` = '" . $username . "';");
-            $result = $query->fetchArray(SQLITE3_ASSOC);
-            if (!($result) or $result["password"] == "0") {
-                $bool = false;
-            } else {
-                $bool = true;
-            }
-        } elseif ($this->getProvider() == "MySQL") {
-            $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
-            $result = mysqli_fetch_array($query);
-            if (!($result) or $result["password"] == "0") {
-                $bool = false;
-            } else {
-                $bool = true;
-            }
-        } elseif ($this->getProvider() == "JSON") {
-            if (!($database->exists($username))) {
-                $bool = false;
-            } else {
-                $bool = true;
-            }
-        } elseif ($this->getProvider() == "YAML") {
-            if (!($database->exists($username))) {
-                $bool = false;
-            } else {
-                $bool = true;
-            }
-        }
-        return $bool;
+        $provider = $this->getDataProvider();
+
+        return $provider->isUserRegistered($username);
     }
 
+    /**
+     * @param Player $player
+     * @return bool
+     */
     public function isUserAuthenticated(Player $player): bool
     {
         $username = strtolower($player->getName());
+
         if (!(isset($this->authenticated[$username]))) {
             $bool = false;
         } else {
@@ -326,30 +292,53 @@ final class LunarAuth extends PluginBase
         return $bool;
     }
 
-    public function authenticateUser(Player $player, bool $bool)
+    /**
+     * @param Player $player
+     * @return void
+     */
+    public function authenticateUser(Player $player)
     {
-        if ($bool == true) {
-            $event = new PlayerAuthorizationEvent($player);
-            Server::getInstance()->getPluginManager()->callEvent($event);
-            if ($event->isCancelled()) {
-                return;
-            }
+        $event = new PlayerAuthorizationEvent($player);
+        Server::getInstance()->getPluginManager()->callEvent($event);
+        if ($event->isCancelled()) {
+            return;
         }
+
         $username = strtolower($player->getName());
-        $this->authenticated[$username] = $bool;
+        $this->authenticated[$username] = true;
     }
 
+    /**
+     * @param Player $player
+     * @return void
+     */
+    public function deauthenticateUser(Player $player)
+    {
+        $username = strtolower($player->getName());
+        $this->authenticated[$username] = false;
+    }
+
+    /**
+     * @param Player $player
+     * @return void
+     */
     public function removeAuthenticatedUser(Player $player)
     {
         $username = strtolower($player->getName());
+
         if (isset($this->authenticated[$username])) {
             unset($this->authenticated[$username]);
         }
     }
 
+    /**
+     * @param Player $player
+     * @return int
+     */
     public function getUserLoginAttempts(Player $player): int
     {
         $username = strtolower($player->getName());
+
         if (!(isset($this->loginAttempts[$username]))) {
             $attempts = 0;
         } else {
@@ -358,6 +347,11 @@ final class LunarAuth extends PluginBase
         return $attempts;
     }
 
+    /**
+     * @param Player $player
+     * @param int $value
+     * @return void
+     */
     public function addUserLoginAttempt(Player $player, int $value)
     {
         $username = strtolower($player->getName());
@@ -365,17 +359,27 @@ final class LunarAuth extends PluginBase
         $this->loginAttempts[$username] = $attempts + $value;
     }
 
+    /**
+     * @param Player $player
+     * @return void
+     */
     public function removeUserLoginAttempts(Player $player)
     {
         $username = strtolower($player->getName());
+
         if (isset($this->loginAttempts[$username])) {
             unset($this->loginAttempts[$username]);
         }
     }
 
+    /**
+     * @param Player $player
+     * @return int
+     */
     public function getUserLoginTime(Player $player): int
     {
         $username = strtolower($player->getName());
+
         if (!(isset($this->loginTime[$username]))) {
             $time = 0;
         } else {
@@ -384,6 +388,11 @@ final class LunarAuth extends PluginBase
         return $time;
     }
 
+    /**
+     * @param Player $player
+     * @param int $value
+     * @return void
+     */
     public function addUserLoginTime(Player $player, int $value)
     {
         $username = strtolower($player->getName());
@@ -391,17 +400,27 @@ final class LunarAuth extends PluginBase
         $this->loginTime[$username] = $time + $value;
     }
 
+    /**
+     * @param Player $player
+     * @return void
+     */
     public function removeUserLoginTime(Player $player)
     {
         $username = strtolower($player->getName());
+
         if (isset($this->loginTime[$username])) {
             unset($this->loginTime[$username]);
         }
     }
 
+    /**
+     * @param Player $player
+     * @return int
+     */
     public function getUserLoginMessageTime(Player $player): int
     {
         $username = strtolower($player->getName());
+
         if (!(isset($this->loginMessageTime[$username]))) {
             $time = 0;
         } else {
@@ -410,6 +429,11 @@ final class LunarAuth extends PluginBase
         return $time;
     }
 
+    /**
+     * @param Player $player
+     * @param int $value
+     * @return void
+     */
     public function addUserLoginMessageTime(Player $player, int $value)
     {
         $username = strtolower($player->getName());
@@ -417,82 +441,79 @@ final class LunarAuth extends PluginBase
         $this->loginMessageTime[$username] = $time + $value;
     }
 
+    /**
+     * @param Player $player
+     * @return void
+     */
     public function removeUserLoginMessageTime(Player $player)
     {
         $username = strtolower($player->getName());
+
         if (isset($this->loginMessageTime[$username])) {
             unset($this->loginMessageTime[$username]);
         }
     }
-    
+
+    /**
+     * @param Player $player
+     * @param string $password
+     * @return void
+     */
     public function registerUser(Player $player, string $password)
     {
-        if ($this->getConfig()->getNested("settings.encrypt") == true) {
-            $password = hash($this->getHash(), $password);
+        if ($this->getConfig()->getNested("settings.encrypt")) {
+            $password = $this->hash($password);
         }
+
         $username = strtolower($player->getName());
         $address = $player->getAddress();
-        $database = $this->getUsersDatabase();
-        if ($this->getProvider() == "SQLite3") {
-            $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "');");
-        } elseif ($this->getProvider() == "MySQL") {
-            mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "');");
-        } elseif ($this->getProvider() == "JSON") {
-            $database->setNested($username . ".password", $password);
-            $database->setNested($username . ".address", $address);
-            $database->save();
-        } elseif ($this->getProvider() == "YAML") {
-            $database->setNested($username . ".password", $password);
-            $database->setNested($username . ".address", $address);
-            $database->save();
-        }
-        $this->authenticateUser($player, true);
+        $provider = $this->getDataProvider();
+
+        $provider->registerUser($username, $password, $address);
+        $this->authenticateUser($player);
     }
 
+    /**
+     * @param Player $player
+     * @return void
+     */
     public function loginUser(Player $player)
     {
         $username = strtolower($player->getName());
         $address = $player->getAddress();
+
         $this->setUserAddress($username, $address);
-        $this->authenticateUser($player, true);
+        $this->authenticateUser($player);
     }
 
+    /**
+     * @param Player $player
+     * @param string $password
+     * @return void
+     */
     public function changeUserPassword(Player $player, string $password)
     {
         $username = strtolower($player->getName());
         $this->setUserPassword($username, $password);
     }
 
+    /**
+     * @param string $username
+     * @return void
+     */
     public function removeUser(string $username)
     {
         $username = strtolower($username);
-        $database = $this->getUsersDatabase();
-        if ($this->getProvider() == "SQLite3") {
-            $database->exec("DELETE FROM `users` WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "MySQL") {
-            mysqli_query($database, "DELETE FROM `users` WHERE `username` = '" . $username . "';");
-        } elseif ($this->getProvider() == "JSON") {
-            $database->remove($username);
-            $database->save();
-        } elseif ($this->getProvider() == "YAML") {
-            $database->remove($username);
-            $database->save();
-        }
+        $provider = $this->getDataProvider();
+
+        $provider->removeUser($username);
     }
 
+    /**
+     * @return void
+     */
     public function onDisable()
     {
-        $database = $this->getUsersDatabase();
-        if ($this->getProvider() == "SQLite3") {
-            $database->close();
-        } elseif ($this->getProvider() == "MySQL") {
-            if ($this->isConnectedToMySQL() == true) {
-                mysqli_close($database);
-            }
-        } elseif ($this->getProvider() == "JSON") {
-            $database->save();
-        } elseif ($this->getProvider() == "YAML") {
-            $database->save();
-        }
+        $this->getDataProvider()->closeDatabase();
     }
 }
