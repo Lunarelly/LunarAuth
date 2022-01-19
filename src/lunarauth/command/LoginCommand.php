@@ -74,7 +74,7 @@ class LoginCommand extends Command implements PluginIdentifiableCommand
 
         if (!($this->main->isUserRegistered($username))) {
             $sender->sendMessage($config->getNested("messages.userNotRegistered"));
-            return true;
+            return false;
         }
 
         if ($this->main->isUserAuthenticated($sender)) {
