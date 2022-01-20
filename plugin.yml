@@ -4,6 +4,8 @@ main: lunarauth\LunarAuth
 version: 1.0.5
 api: 2.0.0
 
+load: STARTUP
+
 prefix: "LunarAuth"
 description: "Cool auth plugin"
 
