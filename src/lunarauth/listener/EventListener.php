@@ -81,17 +81,17 @@ class EventListener implements Listener
         $this->main->deauthenticateUser($player);
         $player->sendMessage(str_replace("{USER}", $player->getName(), $config->getNested("messages.joinMessage")));
 
-        if ($config->getNested("settings.dataLogin")) {
+        if ($config->getNested("settings.dataLogin.enabled")) {
             if ($this->main->isUserRegistered($username)) {
                 if (strtolower($config->getNested("settings.dataLogin.type")) == "ip") {
-                    if ($player->getAddress() == $this->main->getUserAddress($username)) {
+                    if ($player->getAddress() === $this->main->getUserAddress($username)) {
                         $this->main->authenticateUser($player);
                         $player->sendMessage($config->getNested("messages.successfulAuthorization"));
                         return;
                     }
                 }
                 elseif (strtolower($config->getNested("settings.dataLogin.type")) == "clientsecret") {
-                    if ($player->getClientSecret() == $this->main->getUserClientSecret($username)) {
+                    if ($player->getClientSecret() === $this->main->getUserClientSecret($username)) {
                         $this->main->authenticateUser($player);
                         $player->sendMessage($config->getNested("messages.successfulAuthorization"));
                         return;
