@@ -48,7 +48,7 @@ class SQLite3DataProvider implements DataProvider {
         }
 
         $this->database = new SQLite3($this->main->getDataFolder() . "data/users.db");
-        $this->database->exec("CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
+        $this->database->exec("CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL, `clientsecret` TEXT NOT NULL);");
     }
 
     /**
@@ -72,7 +72,7 @@ class SQLite3DataProvider implements DataProvider {
         $result = $query->fetchArray(SQLITE3_ASSOC);
 
         if (!($result)) {
-            $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '0', '0')");
+            $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '0', '0', '0')");
         }
     }
 
@@ -106,6 +106,20 @@ class SQLite3DataProvider implements DataProvider {
 
     /**
      * @param string $username
+     * @param string $clientSecret
+     * @return void
+     */
+    public function setUserClientSecret(string $username, string $clientSecret)
+    {
+        $username = strtolower($username);
+        $this->checkUserData($username);
+        $database = $this->getDatabase();
+
+        $database->exec("UPDATE `users` SET `clientsecret` = '" . $clientSecret . "' WHERE `username` = '" . $username . "';");
+    }
+
+    /**
+     * @param string $username
      * @return string
      */
     public function getUserPassword(string $username): string
@@ -126,6 +140,18 @@ class SQLite3DataProvider implements DataProvider {
         $database = $this->getDatabase();
 
         return $database->querySingle("SELECT `address` FROM `users` WHERE `username` = '" . $username . "';");
+    }
+
+    /**
+     * @param string $username
+     * @return string
+     */
+    public function getUserClientSecret(string $username): string
+    {
+        $username = strtolower($username);
+        $database = $this->getDatabase();
+
+        return $database->querySingle("SELECT `clientsecret` FROM `users` WHERE `username` = '" . $username . "';");
     }
 
     /**
@@ -152,14 +178,15 @@ class SQLite3DataProvider implements DataProvider {
      * @param string $username
      * @param string $password
      * @param string $address
+     * @param string $clientSecret
      * @return void
      */
-    public function registerUser(string $username, string $password, string $address)
+    public function registerUser(string $username, string $password, string $address, string $clientSecret)
     {
         $username = strtolower($username);
         $database = $this->getDatabase();
 
-        $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "');");
+        $database->exec("INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "', '" . $clientSecret . "');");
     }
 
     /**

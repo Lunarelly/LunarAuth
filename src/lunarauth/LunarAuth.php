@@ -242,6 +242,19 @@ final class LunarAuth extends PluginBase
 
     /**
      * @param string $username
+     * @param string $clientSecret
+     * @return void
+     */
+    public function setUserClientSecret(string $username, string $clientSecret)
+    {
+        $username = strtolower($username);
+        $provider = $this->getDataProvider();
+
+        $provider->setUserClientSecret($username, $clientSecret);
+    }
+
+    /**
+     * @param string $username
      * @return string
      */
     public function getUserPassword(string $username): string
@@ -262,6 +275,18 @@ final class LunarAuth extends PluginBase
         $provider = $this->getDataProvider();
 
         return $provider->getUserAddress($username);
+    }
+
+    /**
+     * @param string $username
+     * @return string
+     */
+    public function getUserClientSecret(string $username): string
+    {
+        $username = strtolower($username);
+        $provider = $this->getDataProvider();
+
+        return $provider->getUserClientSecret($username);
     }
 
     /**
@@ -465,11 +490,13 @@ final class LunarAuth extends PluginBase
             $password = $this->hash($password);
         }
 
-        $username = strtolower($player->getName());
-        $address = $player->getAddress();
         $provider = $this->getDataProvider();
 
-        $provider->registerUser($username, $password, $address);
+        $username = strtolower($player->getName());
+        $address = $player->getAddress();
+        $clientSecret = $player->getClientSecret();
+
+        $provider->registerUser($username, $password, $address, $clientSecret);
         $this->authenticateUser($player);
     }
 
@@ -481,8 +508,10 @@ final class LunarAuth extends PluginBase
     {
         $username = strtolower($player->getName());
         $address = $player->getAddress();
+        $clientSecret = $player->getClientSecret();
 
         $this->setUserAddress($username, $address);
+        $this->setUserClientSecret($username, $clientSecret);
         $this->authenticateUser($player);
     }
 

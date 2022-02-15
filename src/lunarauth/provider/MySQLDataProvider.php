@@ -88,7 +88,7 @@ class MySQLDataProvider implements DataProvider
 
         $this->connectToMySQL();
         if ($this->isConnectedToMySQL()) {
-            mysqli_query($this->database, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL);");
+            mysqli_query($this->database, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL, `clientsecret` TEXT NOT NULL);");
         } else {
             $this->main->setDataProvider(new NullDataProvider($this->main));
             $this->main->getLogger()->critical("Connection to MySQL failed. Disabling plugin.");
@@ -116,7 +116,7 @@ class MySQLDataProvider implements DataProvider
         $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
         $result = mysqli_fetch_array($query);
         if (!($result)) {
-            mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '0', '0')");
+            mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '0', '0', '0')");
         }
     }
 
@@ -146,6 +146,20 @@ class MySQLDataProvider implements DataProvider
         $database = $this->getDatabase();
 
         mysqli_query($database, "UPDATE `users` SET `address` = '" . $address . "' WHERE `username` = '" . $username . "';");
+    }
+
+    /**
+     * @param string $username
+     * @param string $clientSecret
+     * @return void
+     */
+    public function setUserClientSecret(string $username, string $clientSecret)
+    {
+        $username = strtolower($username);
+        $this->checkUserData($username);
+        $database = $this->getDatabase();
+
+        mysqli_query($database, "UPDATE `users` SET `clientsecret` = '" . $clientSecret . "' WHERE `username` = '" . $username . "';");
     }
 
     /**
@@ -180,6 +194,21 @@ class MySQLDataProvider implements DataProvider
 
     /**
      * @param string $username
+     * @return string
+     */
+    public function getUserClientSecret(string $username): string
+    {
+        $username = strtolower($username);
+        $database = $this->getDatabase();
+
+        $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
+        $result = mysqli_fetch_array($query);
+
+        return $result["clientsecret"];
+    }
+
+    /**
+     * @param string $username
      * @return bool
      */
     public function isUserRegistered(string $username): bool
@@ -189,6 +218,7 @@ class MySQLDataProvider implements DataProvider
 
         $query = mysqli_query($database, "SELECT * FROM `users` WHERE `username` = '" . $username . "';");
         $result = mysqli_fetch_array($query);
+
         if (!($result) or $result["password"] == "0") {
             $bool = false;
         } else {
@@ -201,14 +231,15 @@ class MySQLDataProvider implements DataProvider
      * @param string $username
      * @param string $password
      * @param string $address
+     * @param string $clientSecret
      * @return void
      */
-    public function registerUser(string $username, string $password, string $address)
+    public function registerUser(string $username, string $password, string $address, string $clientSecret)
     {
         $username = strtolower($username);
         $database = $this->getDatabase();
 
-        mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "');");
+        mysqli_query($database, "INSERT INTO `users` VALUES ('" . $username . "', '" . $password . "', '" . $address . "', '" . $clientSecret . "');");
     }
 
     /**

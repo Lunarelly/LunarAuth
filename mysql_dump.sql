@@ -29,7 +29,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `users` (
   `username` varchar(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `password` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-  `address` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
+  `address` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `clientsecret` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

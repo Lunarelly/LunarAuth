@@ -41,9 +41,16 @@ interface DataProvider {
     /**
      * @param string $username
      * @param string $address
-     * @return void
+     * @return mixed
      */
     public function setUserAddress(string $username, string $address);
+
+    /**
+     * @param string $username
+     * @param string $clientSecret
+     * @return void
+     */
+    public function setUserClientSecret(string $username, string $clientSecret);
 
     /**
      * @param string $username
@@ -59,6 +66,12 @@ interface DataProvider {
 
     /**
      * @param string $username
+     * @return string
+     */
+    public function getUserClientSecret(string $username): string;
+
+    /**
+     * @param string $username
      * @return boolean
      */
     public function isUserRegistered(string $username): bool;
@@ -67,9 +80,10 @@ interface DataProvider {
      * @param string $username
      * @param string $password
      * @param string $address
+     * @param string $clientSecret
      * @return void
      */
-    public function registerUser(string $username, string $password, string $address);
+    public function registerUser(string $username, string $password, string $address, string $clientSecret);
 
     /**
      * @param string $username

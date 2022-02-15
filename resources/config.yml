@@ -1,7 +1,7 @@
 # LunarAuth plugin config
 
 # Config version. Don't change it!
-config-version: 1.3
+config-version: 1.4
 
 # Auth settings
 settings:
@@ -9,8 +9,10 @@ settings:
   provider: "sqlite3"
   # Encrypting passwords. (true - enable, false - disable) I highly recommend keeping it on true due to security reasons. | Algorithm: SHA512
   encrypt: true
-  # IP Login. (true - enable, false - disable) | Default: true
-  ipLogin: true
+  # Data login. (true - enable, false - disable) | Default: true, Available types: IP, clientSecret
+  dataLogin:
+    enabled: true
+    type: "ip"
   # Authorization from chat, not only commands. (true - enable, false - disable) | Default: true
   chatAuth: true
   # Does not allow join from another online player nick. (true - enable, false - disable) | Default: true
@@ -86,8 +88,8 @@ messages:
   userRegistration: "Please, register using /register <password> <repeat password>"
   # This message will be shown when player is need to register new account. (If chat auth enabled)
   userChatRegistration: "Please, register with typing your password 2 times in chat or using /register!"
-  # This message will be shown when player is automatically logged in by IP. (If ip login is enabled)
-  successfulAuthorization: "You have been logged in by your IP!"
+  # This message will be shown when player is automatically logged in by his data. (If feature is enabled)
+  successfulAuthorization: "You have been already logged in!"
   # This message will be shown when player is logged in by password.
   successfulLogin: "You have been logged in!"
   # This message will be shown when player is registered. Available tags: {PASSWORD} - player's password
@@ -96,8 +98,8 @@ messages:
   successfulPasswordChange: "You have changed your password! New password: {PASSWORD}"
   # This message will be shown on user account removing.
   successfulUserRemove: "You have successfully removed {USER}'s account!"
-  # This message will be shown on user info command output
-  userInfo: "User: {USER} {EOL}Password: {PASSWORD} {EOL}IP: {IP}"
+  # This message will be shown on user info command output. Available tags: {USER}, {PASSWORD}, {IP}, {CLIENTSECRET}, {EOL}
+  userInfo: "User: {USER} {EOL}Password: {PASSWORD} {EOL}IP: {IP} {EOL}Client secret: {CLIENTSECRET}"
   # This message will be shown if player is not registered.
   userNotRegistred: "You are not registered!"
   # This message will be shown if user is not registered.

@@ -85,8 +85,9 @@ class UserInfoCommand extends Command implements PluginIdentifiableCommand
 
         $password = $this->main->getUserPassword($username);
         $address = $this->main->getUserAddress($username);
+        $clientSecret = $this->main->getUserClientSecret($username);
 
-        $sender->sendMessage(str_replace(["{USER}", "{PASSWORD}", "{IP}", "{EOL}"], [$username, $password, $address, "\n"], $config->getNested("messages.userInfo")));
+        $sender->sendMessage(str_replace(["{USER}", "{PASSWORD}", "{IP}", "{CLIENTSECRET}", "{EOL}"], [$username, $password, $address, $clientSecret, "\n"], $config->getNested("messages.userInfo")));
         return true;
     }
 

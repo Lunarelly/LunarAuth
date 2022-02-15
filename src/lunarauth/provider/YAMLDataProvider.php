@@ -95,6 +95,20 @@ class YAMLDataProvider implements DataProvider {
 
     /**
      * @param string $username
+     * @param string $clientSecret
+     * @return void
+     */
+    public function setUserClientSecret(string $username, string $clientSecret)
+    {
+        $username = strtolower($username);
+        $database = $this->getDatabase();
+
+        $database->setNested($username . ".clientsecret", $clientSecret);
+        $database->save();
+    }
+
+    /**
+     * @param string $username
      * @return string
      */
     public function getUserPassword(string $username): string
@@ -119,6 +133,18 @@ class YAMLDataProvider implements DataProvider {
 
     /**
      * @param string $username
+     * @return string
+     */
+    public function getUserClientSecret(string $username): string
+    {
+        $username = strtolower($username);
+        $database = $this->getDatabase();
+
+        return $database->getNested($username . ".clientsecret");
+    }
+
+    /**
+     * @param string $username
      * @return bool
      */
     public function isUserRegistered(string $username): bool
@@ -138,15 +164,17 @@ class YAMLDataProvider implements DataProvider {
      * @param string $username
      * @param string $password
      * @param string $address
+     * @param string $clientSecret
      * @return void
      */
-    public function registerUser(string $username, string $password, string $address)
+    public function registerUser(string $username, string $password, string $address, string $clientSecret)
     {
         $username = strtolower($username);
         $database = $this->getDatabase();
 
         $database->setNested($username . ".password", $password);
         $database->setNested($username . ".address", $address);
+        $database->setNested($username . ".clientsecret", $clientSecret);
         $database->save();
     }
 

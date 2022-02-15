@@ -64,6 +64,15 @@ class NullDataProvider implements DataProvider {
 
     /**
      * @param string $username
+     * @param string $clientSecret
+     * @return void
+     */
+    public function setUserClientSecret(string $username, string $clientSecret)
+    {
+    }
+
+    /**
+     * @param string $username
      * @return string
      */
     public function getUserPassword(string $username): string
@@ -82,6 +91,15 @@ class NullDataProvider implements DataProvider {
 
     /**
      * @param string $username
+     * @return string
+     */
+    public function getUserClientSecret(string $username): string
+    {
+        return "";
+    }
+
+    /**
+     * @param string $username
      * @return bool
      */
     public function isUserRegistered(string $username): bool
@@ -93,9 +111,10 @@ class NullDataProvider implements DataProvider {
      * @param string $username
      * @param string $password
      * @param string $address
+     * @param string $clientSecret
      * @return void
      */
-    public function registerUser(string $username, string $password, string $address)
+    public function registerUser(string $username, string $password, string $address, string $clientSecret)
     {
     }
 
