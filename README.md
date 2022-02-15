@@ -10,7 +10,7 @@ Functional and easy to use auth plugin.
 - /lunarauth
 
 ## Features
-- IP login
+- IP/Client secret login
 - Passwords encryption (you can disable it)
 - MySQL, SQLite3, JSON, YAML support
 - Chat auth (you can disable it)
