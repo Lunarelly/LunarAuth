@@ -51,7 +51,7 @@ class RegisterCommand extends Command implements PluginIdentifiableCommand
         $this->setUsage($this->main->getConfig()->getNested("usages.register"));
         $this->setAliases(["r", "reg"]);
 
-        parent::__construct("register", $this->description, $this->usageMessage, $this->getAliases());
+        parent::__construct("register", $this->getDescription(), $this->getUsage(), $this->getAliases());
     }
 
     /**

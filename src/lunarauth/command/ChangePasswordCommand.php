@@ -51,7 +51,7 @@ class ChangePasswordCommand extends Command implements PluginIdentifiableCommand
         $this->setUsage($this->main->getConfig()->getNested("usages.changepassword"));
         $this->setAliases(["cp", "chp", "ch"]);
 
-        parent::__construct("changepassword", $this->description, $this->usageMessage, $this->getAliases());
+        parent::__construct("changepassword", $this->getDescription(), $this->getUsage(), $this->getAliases());
     }
 
     /**

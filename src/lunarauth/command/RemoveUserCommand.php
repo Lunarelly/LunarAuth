@@ -50,7 +50,7 @@ class RemoveUserCommand extends Command implements PluginIdentifiableCommand
         $this->setUsage($this->main->getConfig()->getNested("usages.removeuser"));
         $this->setAliases(["deluser", "rmuser"]);
 
-        parent::__construct("removeuser", $this->description, $this->usageMessage, $this->getAliases());
+        parent::__construct("removeuser", $this->getDescription(), $this->getUsage(), $this->getAliases());
     }
 
     /**

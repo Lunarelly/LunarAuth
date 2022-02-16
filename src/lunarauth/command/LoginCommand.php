@@ -49,7 +49,7 @@ class LoginCommand extends Command implements PluginIdentifiableCommand
         $this->setUsage($this->main->getConfig()->getNested("usages.login"));
         $this->setAliases(["l", "log"]);
 
-        parent::__construct("login", $this->description, $this->usageMessage, $this->getAliases());
+        parent::__construct("login", $this->getDescription(), $this->getUsage(), $this->getAliases());
     }
 
     /**

@@ -49,6 +49,10 @@ use function hash;
 final class LunarAuth extends PluginBase
 {
 
+    const PREFIX = "[LunarAuth]";
+
+    const CONFIG_VERSION = "1.4";
+
     /**
      * @var mixed
      */
@@ -58,11 +62,6 @@ final class LunarAuth extends PluginBase
      * @var DataProvider
      */
     private $dataProvider;
-
-    /**
-     * @var string
-     */
-    public $prefix = "[LunarAuth]";
 
     /**
      * @var array
@@ -85,11 +84,13 @@ final class LunarAuth extends PluginBase
     public $loginMessageTime = array();
 
     /**
-     * @return LunarAuth
+     * @return void
      */
-    public static function getInstance(): LunarAuth
+    private function checkConfigVersion()
     {
-        return self::$instance;
+        if ($this->getConfig()->get("config-version") !== self::CONFIG_VERSION) {
+            $this->getLogger()->alert("Config version is out of date. Please update it.");
+        }
     }
 
     /**
@@ -142,6 +143,8 @@ final class LunarAuth extends PluginBase
         self::$instance = $this;
 
         $this->saveDefaultConfig();
+        $this->checkConfigVersion();
+
         $this->registerCommands();
         $this->registerListeners();
         $this->scheduleTasks();
@@ -186,6 +189,14 @@ final class LunarAuth extends PluginBase
     }
 
     /**
+     * @return LunarAuth
+     */
+    public static function getInstance(): LunarAuth
+    {
+        return self::$instance;
+    }
+
+    /**
      * @return DataProvider
      */
     private function getDataProvider(): DataProvider
@@ -207,7 +218,7 @@ final class LunarAuth extends PluginBase
      */
     public function getPrefix(): string
     {
-        return $this->prefix;
+        return self::PREFIX;
     }
 
     /**

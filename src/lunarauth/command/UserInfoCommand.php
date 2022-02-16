@@ -50,7 +50,7 @@ class UserInfoCommand extends Command implements PluginIdentifiableCommand
         $this->setUsage($this->main->getConfig()->getNested("usages.userinfo"));
         $this->setAliases(["checkpassword", "checkuser"]);
 
-        parent::__construct("userinfo", $this->description, $this->usageMessage, $this->getAliases());
+        parent::__construct("userinfo", $this->getDescription(), $this->getUsage(), $this->getAliases());
     }
 
     /**

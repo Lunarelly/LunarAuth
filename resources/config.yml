@@ -1,7 +1,7 @@
 # LunarAuth plugin config
 
 # Config version. Don't change it!
-config-version: 1.4
+config-version: "1.4"
 
 # Auth settings
 settings:
@@ -101,13 +101,13 @@ messages:
   # This message will be shown on user info command output. Available tags: {USER}, {PASSWORD}, {IP}, {CLIENTSECRET}, {EOL}
   userInfo: "User: {USER} {EOL}Password: {PASSWORD} {EOL}IP: {IP} {EOL}Client secret: {CLIENTSECRET}"
   # This message will be shown if player is not registered.
-  userNotRegistred: "You are not registered!"
+  userNotRegistered: "You are not registered!"
   # This message will be shown if user is not registered.
-  userNotRegistredConsole: "User is not registered!"
+  userNotRegisteredConsole: "User is not registered!"
   # This message will be shown if player is already logged in.
   userAlreadyLoggedIn: "You are already logged in!"
   # This message will be shown if player is already registered.
-  userAlreadyRegistred: "You are already registered!"
+  userAlreadyRegistered: "You are already registered!"
   # This message will be shown if player has sent incorrect password.
   incorrectPassword: "Incorrect password!"
   # This message will be shown if player's passwords doesn't match.

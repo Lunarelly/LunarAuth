@@ -48,7 +48,7 @@ class LunarAuthCommand extends Command implements PluginIdentifiableCommand
         $this->setUsage($this->main->getConfig()->getNested("usages.default"));
         $this->setAliases(["la", "auth"]);
 
-        parent::__construct("lunarauth", $this->description, $this->usageMessage, $this->getAliases());
+        parent::__construct("lunarauth", $this->getDescription(), $this->getUsage(), $this->getAliases());
     }
 
     /**
@@ -77,8 +77,10 @@ class LunarAuthCommand extends Command implements PluginIdentifiableCommand
             $description = $this->main->getDescription();
             $name = $description->getName();
             $version = $description->getVersion();
+            $author = implode($description->getAuthors());
+            $website = $description->getWebsite();
 
-            $sender->sendMessage(TextFormat::LIGHT_PURPLE . $this->main->getPrefix() . " This server is running " . $name . " v" . $version . "\nAuthor: Lunarelly\nGitHub: https://github.com/Lunarelly");
+            $sender->sendMessage(TextFormat::LIGHT_PURPLE . $this->main->getPrefix() . " This server is running " . $name . " v" . $version . "\n" . TextFormat::LIGHT_PURPLE . "Author: " . $author . "\n" . TextFormat::LIGHT_PURPLE . "GitHub: " . $website);
         }
         return true;
     }
