@@ -143,6 +143,6 @@ usages:
   # Usage of /userinfo command.
   userinfo: "Usage: /userinfo <nick>"
   # Usage of /lunarauth command.
-  default: "Usage: /lunarauth <help|info>"
+  default: "Usage: /lunarauth <help|about>"
 
 # Plugin was made with <3 by Lunarelly (https://github.com/Lunarelly)

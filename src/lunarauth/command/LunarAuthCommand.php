@@ -63,7 +63,7 @@ class LunarAuthCommand extends Command implements PluginIdentifiableCommand
             return false;
         }
 
-        $subcommands = ["help", "info"];
+        $subcommands = ["help", "about"];
         if (empty($args) or !(isset($args[0])) or !(in_array($args[0], $subcommands))) {
             $sender->sendMessage($this->usageMessage);
             return false;
@@ -73,7 +73,7 @@ class LunarAuthCommand extends Command implements PluginIdentifiableCommand
             $sender->sendMessage(TextFormat::LIGHT_PURPLE . $this->main->getPrefix() . " Commands: /register, /login, /changepassword, /removeuser, /userinfo");
         }
 
-        if ($args[0] == "info") {
+        if ($args[0] == "about") {
             $description = $this->main->getDescription();
             $name = $description->getName();
             $version = $description->getVersion();

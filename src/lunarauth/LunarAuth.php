@@ -259,6 +259,7 @@ final class LunarAuth extends PluginBase
     public function setUserClientSecret(string $username, string $clientSecret)
     {
         $username = strtolower($username);
+        $clientSecret = base64_encode($clientSecret);
         $provider = $this->getDataProvider();
 
         $provider->setUserClientSecret($username, $clientSecret);
@@ -297,7 +298,7 @@ final class LunarAuth extends PluginBase
         $username = strtolower($username);
         $provider = $this->getDataProvider();
 
-        return $provider->getUserClientSecret($username);
+        return base64_decode($provider->getUserClientSecret($username));
     }
 
     /**
@@ -505,7 +506,7 @@ final class LunarAuth extends PluginBase
 
         $username = strtolower($player->getName());
         $address = $player->getAddress();
-        $clientSecret = $player->getClientSecret();
+        $clientSecret = base64_encode($player->getClientSecret());
 
         $provider->registerUser($username, $password, $address, $clientSecret);
         $this->authenticateUser($player);

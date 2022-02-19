@@ -84,6 +84,7 @@ class SQLite3DataProvider implements DataProvider {
     public function setUserPassword(string $username, string $password)
     {
         $username = strtolower($username);
+
         $this->checkUserData($username);
         $database = $this->getDatabase();
 
@@ -98,6 +99,7 @@ class SQLite3DataProvider implements DataProvider {
     public function setUserAddress(string $username, string $address)
     {
         $username = strtolower($username);
+
         $this->checkUserData($username);
         $database = $this->getDatabase();
 
@@ -112,6 +114,7 @@ class SQLite3DataProvider implements DataProvider {
     public function setUserClientSecret(string $username, string $clientSecret)
     {
         $username = strtolower($username);
+
         $this->checkUserData($username);
         $database = $this->getDatabase();
 
