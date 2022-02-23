@@ -1,7 +1,7 @@
 name: LunarAuth
-main: lunarauth\LunarAuth
+main: lunarelly\lunarauth\LunarAuth
 
-version: 1.0.6
+version: 1.0.7
 api: 2.0.0
 
 load: STARTUP
