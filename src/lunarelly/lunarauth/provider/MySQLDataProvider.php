@@ -85,13 +85,7 @@ class MySQLDataProvider implements DataProvider
 
         $this->connectToMySQL();
         if ($this->isConnectedToMySQL()) {
-            mysqli_query($this->database, "CREATE TABLE IF NOT EXISTS `users` (
-                                                `username` VARCHAR(16) NOT NULL,
-                                                `password` TEXT NOT NULL,
-                                                `address` TEXT NOT NULL,
-                                                `clientsecret` TEXT NOT NULL
-                                                );"
-            );
+            mysqli_query($this->database, "CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL, `clientsecret` TEXT NOT NULL);");
         } else {
             $this->main->setDataProvider(new NullDataProvider($this->main));
             $this->main->getLogger()->critical("Connection to MySQL failed. Disabling plugin.");

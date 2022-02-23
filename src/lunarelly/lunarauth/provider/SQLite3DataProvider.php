@@ -46,13 +46,7 @@ class SQLite3DataProvider implements DataProvider
         }
 
         $this->database = new SQLite3($this->main->getDataFolder() . "data/users.db");
-        $this->database->exec("CREATE TABLE IF NOT EXISTS `users` (
-                                    `username` VARCHAR(16) NOT NULL,
-                                    `password` TEXT NOT NULL,
-                                    `address` TEXT NOT NULL,
-                                    `clientsecret` TEXT NOT NULL
-                                   );"
-        );
+        $this->database->exec("CREATE TABLE IF NOT EXISTS `users` (`username` VARCHAR(16) NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL, `clientsecret` TEXT NOT NULL);");
     }
 
     /**
